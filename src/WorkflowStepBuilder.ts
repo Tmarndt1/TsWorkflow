@@ -1,28 +1,22 @@
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
-import { IWorkflowStepBuilderBase, WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
+import { WorkflowErrorOption, WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 import { IWorkflowStepBuilderFinally, WorkflowStepBuilderFinally } from "./WorkflowStepBuilderFinally";
 
-export interface IWorkflowStepBuilder<TInput, TOutput, TData> extends IWorkflowStepBuilderBase<TInput, TOutput, TData> {
+export interface IWorkflowStepBuilder<TInput, TOutput, TData> {
     delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TData>;
     then<TNextOutput>(step: { new(): WorkflowStep<TOutput, TNextOutput, TData> }): IWorkflowStepBuilder<TOutput, TNextOutput, TData>;
     endWith(step: { new(): WorkflowStep<TOutput, void, TData> }): IWorkflowStepBuilderFinally<TOutput, TData>;
-    onError(): IWorkflowStepBuilder<TInput, TOutput, TData>;
-}
-
-export interface IWorkflowStepBuilderWithErrorHandling<TInput, TOutput, TData> extends IWorkflowStepBuilder<TInput, TOutput, TData> {
-    compensateWith<TNextOutput>(step: { new(): WorkflowStep<TOutput, TNextOutput, TData> }): IWorkflowStepBuilder<TOutput, TNextOutput, TData>;
+    onError(option: WorkflowErrorOption.Retry, milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TData>;
+    onError(option: WorkflowErrorOption.Terminate): IWorkflowStepBuilder<TInput, TOutput, TData>;
 }
 
 export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBuilderBase<TInput, TOutput, TData> implements IWorkflowStepBuilder<TInput, TOutput, TData> {
-    public nextStep: WorkflowStepBuilderBase<any, any, any> = null;
-    public lastStep: WorkflowStepBuilderBase<any, any, any> = null;
     public isFinal: boolean = false;
-    private _currentStep: WorkflowStep<TInput, TOutput, TData> = null;
 
-    public constructor(step: WorkflowStep<TInput, TOutput, TData>, last: WorkflowStepBuilder<any, any, any>, context: WorkflowContext<TData>) {
+    public constructor(step: WorkflowStep<TInput, TOutput, TData>, last: WorkflowStepBuilderBase<any, any, any>, context: WorkflowContext<TData>) {
         super(step, last, context);
-        this._currentStep = step;
+        this.currentStep = step;
         this.lastStep = last;
         this.context = context;
     }
@@ -49,8 +43,12 @@ export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBui
         return stepBuiler;
     }
 
-    public onError(): IWorkflowStepBuilder<TInput, TOutput, TData> {
-
+    public onError(option: WorkflowErrorOption.Retry, milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TData>;
+    public onError(option: WorkflowErrorOption.Terminate, param: void): IWorkflowStepBuilder<TInput, TOutput, TData>;
+    public onError<T>(option: WorkflowErrorOption, param: T): IWorkflowStepBuilder<TInput, TOutput, TData> {
+        
+        this.errorOption = option;
+        
         return this;
     }
     
@@ -58,12 +56,27 @@ export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBui
         return new Promise((resolve, reject) => {
             setTimeout(async () => {
                 try {
-                    let output: TOutput = await this._currentStep.run(input, this.context);
+                    let output: TOutput = await this.currentStep.run(input, this.context);
+
                     resolve(output);
                 }
                 catch (error: any) {
-                    // TODO: Hanlde on error
-                    reject(error);
+                    if (this.errorOption === WorkflowErrorOption.Retry) {
+                        let retry = setInterval(async () => {
+                            try {
+                                let output: TOutput = await this.currentStep.run(input, this.context);
+
+                                resolve(output);
+
+                                clearInterval(retry);
+                            }
+                            catch (error: any) {
+                                // continue
+                            }
+                        }, this.retryMilliseconds);
+                    } else if (this.errorOption === WorkflowErrorOption.Terminate) {
+                        reject(error);
+                    }
                 }
             }, this.delayTime);
         });
