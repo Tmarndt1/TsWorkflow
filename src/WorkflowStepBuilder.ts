@@ -12,9 +12,7 @@ export interface IWorkflowStepBuilder<TInput, TOutput, TData> {
 }
 
 export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBuilderBase<TInput, TOutput, TData> implements IWorkflowStepBuilder<TInput, TOutput, TData> {
-    public isFinal: boolean = false;
-
-    public constructor(step: WorkflowStep<TInput, TOutput, TData>, last: WorkflowStepBuilderBase<any, any, any>, context: WorkflowContext<TData>) {
+    public constructor(step: WorkflowStep<TInput, TOutput, TData>, last: WorkflowStepBuilderBase<any, TInput, TData>, context: WorkflowContext<TData>) {
         super(step, last, context);
         this.currentStep = step;
         this.lastStep = last;
@@ -46,8 +44,9 @@ export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBui
     public onError(option: WorkflowErrorOption.Retry, milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TData>;
     public onError(option: WorkflowErrorOption.Terminate, param: void): IWorkflowStepBuilder<TInput, TOutput, TData>;
     public onError<T>(option: WorkflowErrorOption, param: T): IWorkflowStepBuilder<TInput, TOutput, TData> {
-        
         this.errorOption = option;
+
+        if (option === WorkflowErrorOption.Retry) this.retryMilliseconds = param as unknown as number;
         
         return this;
     }
@@ -71,7 +70,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBui
                                 clearInterval(retry);
                             }
                             catch (error: any) {
-                                // continue
+                                reject(error);
                             }
                         }, this.retryMilliseconds);
                     } else if (this.errorOption === WorkflowErrorOption.Terminate) {

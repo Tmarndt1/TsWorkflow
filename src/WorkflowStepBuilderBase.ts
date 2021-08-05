@@ -1,6 +1,5 @@
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
-import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 
 export enum WorkflowErrorOption {
     Retry,
@@ -8,9 +7,10 @@ export enum WorkflowErrorOption {
 }
 
 export abstract class WorkflowStepBuilderBase<TInput, TOutput, TData> {
-    public lastStep: WorkflowStepBuilderBase<any, any, any> = null;
-    public nextStep: WorkflowStepBuilderBase<any, any, any> = null;
+    public lastStep: WorkflowStepBuilderBase<any, TInput, TData> = null;
+    public nextStep: WorkflowStepBuilderBase<TOutput, any, TData> = null;
     public currentStep: WorkflowStep<TInput, TOutput, TData> = null;
+    public isFinal: boolean = false;
     protected context: WorkflowContext<TData> = null;
     protected delayTime: number = 0;
     protected errorOption: WorkflowErrorOption;

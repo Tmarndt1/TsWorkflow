@@ -1,6 +1,8 @@
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
 import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
+import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
+import { WorkflowStepBuilderFinally } from "./WorkflowStepBuilderFinally";
 
 export interface IWorkflowBuilder<TData> {
     startWith<TInput, TOutput>(step: { new(): WorkflowStep<TInput, TOutput, TData> }): IWorkflowStepBuilder<TInput, TOutput, TData>;
@@ -8,7 +10,7 @@ export interface IWorkflowBuilder<TData> {
 
 export class WorkflowBuilder<TData> implements IWorkflowBuilder<TData> {
     private _context: WorkflowContext<TData> = null;
-    private _firstStep: WorkflowStepBuilder<any, any, TData> = null;
+    private _firstStep: WorkflowStepBuilderBase<any, any, TData> = null;
 
     public constructor(context: WorkflowContext<TData>) {
         this._context = context;
@@ -25,7 +27,7 @@ export class WorkflowBuilder<TData> implements IWorkflowBuilder<TData> {
     public run(): Promise<TData> {
         return new Promise(async (resolve, reject) => {
             try {
-                let step: WorkflowStepBuilder<any, any, any> = this._firstStep;
+                let step: WorkflowStepBuilderBase<any, any, TData> = this._firstStep;
                 let output: any = null;
                 let iteration: number = 0;
 
@@ -34,7 +36,7 @@ export class WorkflowBuilder<TData> implements IWorkflowBuilder<TData> {
 
                     step = step.nextStep;
 
-                    if (step.isFinal) break;
+                    if (step.isFinal || step instanceof WorkflowStepBuilderFinally) break;
                 }
 
                 resolve(this._context.data);

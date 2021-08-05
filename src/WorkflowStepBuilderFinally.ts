@@ -10,13 +10,12 @@ export interface IWorkflowStepBuilderFinally<TInput, TData> {
 }
 
 export class WorkflowStepBuilderFinally<TInput, TData> extends WorkflowStepBuilderBase<TInput, void, TData> implements IWorkflowStepBuilderFinally<TInput, TData> {
-    public lastStep: WorkflowStepBuilder<any, any, any> = null;
-
     public constructor(step: WorkflowStep<TInput, void, TData>, last: WorkflowStepBuilder<any, any, any>, context: WorkflowContext<TData>) {
         super(step, last, context);
         this.currentStep = step;
         this.lastStep = last;
         this.context = context;
+        this.isFinal = true;
     }
 
     public delay(delay: number): IWorkflowStepBuilderFinally<TInput, TData> {
@@ -52,7 +51,7 @@ export class WorkflowStepBuilderFinally<TInput, TData> extends WorkflowStepBuild
                                 clearInterval(retry);
                             }
                             catch (error: any) {
-                                // continue
+                                reject(error)
                             }
                         }, this.retryMilliseconds);
                     } else if (this.errorOption === WorkflowErrorOption.Terminate) {
