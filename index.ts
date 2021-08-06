@@ -1,4 +1,4 @@
-export { Workflow } from "./src/Worflow";
+export { Workflow } from "./src/Workflow";
 export { IWorkflowBuilder } from "./src/WorkflowBuilder";
 export { WorkflowContext } from "./src/WorkflowContext";
 export { WorkflowStep } from "./src/WorkflowStep";
