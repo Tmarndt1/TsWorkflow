@@ -1,7 +1,7 @@
 # TsWorkflow
 A simple workflow library written in typescript 
 
-''''
+```
 class UpdateAgeStep extends WorkflowStep<void, number, { age: number }> {
     public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
         return new Promise((resolve) => {
@@ -32,4 +32,4 @@ class AgeWorkflow extends Workflow<{ age: number }> {
 }
 
 let workflow: Workflow<{ age: number }> = new AgeWorkflow({ age: 30 });
-''''
+```
