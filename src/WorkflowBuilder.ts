@@ -4,19 +4,19 @@ import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder
 import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 import { WorkflowStepBuilderFinally } from "./WorkflowStepBuilderFinally";
 
-export interface IWorkflowBuilder<TData> {
-    startWith<TInput, TOutput>(step: { new(): WorkflowStep<TInput, TOutput, TData> }): IWorkflowStepBuilder<TInput, TOutput, TData>;
+export interface IWorkflowBuilder<TContext, TResult> {
+    startWith<TInput, TOutput>(step: { new(): WorkflowStep<TInput, TOutput, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
 }
 
-export class WorkflowBuilder<TData> implements IWorkflowBuilder<TData> {
-    private _context: WorkflowContext<TData> = null;
-    private _firstStep: WorkflowStepBuilderBase<any, any, TData> = null;
+export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TContext, TResult> {
+    private _context: WorkflowContext<TContext> = null;
+    private _firstStep: WorkflowStepBuilderBase<any, any, TContext> = null;
 
-    public constructor(context: WorkflowContext<TData>) {
+    public constructor(context: WorkflowContext<TContext>) {
         this._context = context;
     }
     
-    public startWith<TInput, TOutput>(step: { new(): WorkflowStep<TInput, TOutput, TData> }): IWorkflowStepBuilder<TInput, TOutput, TData> {
+    public startWith<TInput, TOutput>(step: { new(): WorkflowStep<TInput, TOutput, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
         let stepBuiler = new WorkflowStepBuilder(new step(), null, this._context);
 
         this._firstStep = stepBuiler;
@@ -24,11 +24,11 @@ export class WorkflowBuilder<TData> implements IWorkflowBuilder<TData> {
         return stepBuiler;
     }
 
-    public run(): Promise<TData> {
+    public run(): Promise<TResult> {
         return new Promise(async (resolve, reject) => {
             try {
-                let step: WorkflowStepBuilderBase<any, any, TData> = this._firstStep;
-                let output: any = null;
+                let step: WorkflowStepBuilderBase<any, any, TContext> = this._firstStep;
+                let output: TResult = null;
                 let iteration: number = 0;
 
                 while (step != null && ++iteration < 100) {
@@ -39,7 +39,7 @@ export class WorkflowBuilder<TData> implements IWorkflowBuilder<TData> {
                     if (step.isFinal || step instanceof WorkflowStepBuilderFinally) break;
                 }
 
-                resolve(this._context.data);
+                resolve(output);
             } catch (error: any) {
                 reject(error);
             }

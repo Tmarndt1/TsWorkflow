@@ -3,29 +3,29 @@ import { WorkflowStep } from "./WorkflowStep";
 import { WorkflowErrorOption, WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 import { IWorkflowStepBuilderFinally, WorkflowStepBuilderFinally } from "./WorkflowStepBuilderFinally";
 
-export interface IWorkflowStepBuilder<TInput, TOutput, TData> {
-    delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TData>;
-    then<TNextOutput>(step: { new(): WorkflowStep<TOutput, TNextOutput, TData> }): IWorkflowStepBuilder<TOutput, TNextOutput, TData>;
-    endWith(step: { new(): WorkflowStep<TOutput, void, TData> }): IWorkflowStepBuilderFinally<TOutput, TData>;
-    onError(option: WorkflowErrorOption.Retry, milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TData>;
-    onError(option: WorkflowErrorOption.Terminate): IWorkflowStepBuilder<TInput, TOutput, TData>;
+export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
+    delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
+    then<TNextOutput>(step: { new(): WorkflowStep<TOutput, TNextOutput, TContext> }): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext>;
+    endWith(step: { new(): WorkflowStep<TOutput, TResult, TContext> }): IWorkflowStepBuilderFinally<TOutput, TResult, TContext>;
+    onError(option: WorkflowErrorOption.Retry, milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
+    onError(option: WorkflowErrorOption.Terminate): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
 }
 
-export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBuilderBase<TInput, TOutput, TData> implements IWorkflowStepBuilder<TInput, TOutput, TData> {
-    public constructor(step: WorkflowStep<TInput, TOutput, TData>, last: WorkflowStepBuilderBase<any, TInput, TData>, context: WorkflowContext<TData>) {
+export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TContext> implements IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
+    public constructor(step: WorkflowStep<TInput, TOutput, TContext>, last: WorkflowStepBuilderBase<any, TInput, TContext>, context: WorkflowContext<TContext>) {
         super(step, last, context);
         this.currentStep = step;
         this.lastStep = last;
         this.context = context;
     }
 
-    public delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TData> {
+    public delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
         this.delayTime = milliseconds;
 
         return this;
     }
 
-    public then<TNextOutput>(step: new () => WorkflowStep<TOutput, TNextOutput, TData>): IWorkflowStepBuilder<TOutput, TNextOutput, TData> {
+    public then<TNextOutput>(step: new () => WorkflowStep<TOutput, TNextOutput, TContext>): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext> {
         let stepBuiler = new WorkflowStepBuilder(new step(), this, this.context);
 
         this.nextStep = stepBuiler;
@@ -33,7 +33,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBui
         return stepBuiler;
     }
 
-    // public segway<TNextOutput>(): IWorkflowStepBuilder<TOutput, TNextOutput, TData> {
+    // public segway<TNextOutput>(): IWorkflowStepBuilder<TOutput, TNextOutput, TContext> {
     //     let stepBuiler = new WorkflowStepBuilder(new step(), this, this.context);
 
     //     this.nextStep = stepBuiler;
@@ -41,7 +41,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBui
     //     return stepBuiler;
     // }
 
-    public endWith(step: new () => WorkflowStep<TOutput, void, TData>): IWorkflowStepBuilderFinally<TOutput, TData> {
+    public endWith(step: new () => WorkflowStep<TOutput, TResult, TContext>): IWorkflowStepBuilderFinally<TOutput, TResult, TContext> {
         let stepBuiler = new WorkflowStepBuilderFinally(new step(), this, this.context);
 
         this.nextStep = stepBuiler;
@@ -49,9 +49,9 @@ export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBui
         return stepBuiler;
     }
 
-    public onError(option: WorkflowErrorOption.Retry, milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TData>;
-    public onError(option: WorkflowErrorOption.Terminate, param: void): IWorkflowStepBuilder<TInput, TOutput, TData>;
-    public onError<T>(option: WorkflowErrorOption, param: T): IWorkflowStepBuilder<TInput, TOutput, TData> {
+    public onError(option: WorkflowErrorOption.Retry, milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
+    public onError(option: WorkflowErrorOption.Terminate, param: void): IWorkflowStepBuilder<TInput, TOutput, TResult,TContext>;
+    public onError<T>(option: WorkflowErrorOption, param: T): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
         this.errorOption = option;
 
         if (option === WorkflowErrorOption.Retry) this.retryMilliseconds = param as unknown as number;

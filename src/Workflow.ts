@@ -1,22 +1,23 @@
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
-import { IWorkflowContext, WorkflowContext } from "./WorkflowContext";
-import { WorkflowStep } from "./WorkflowStep";
+import { WorkflowContext } from "./WorkflowContext";
+import { IWorkflowStepBuilderFinally } from "./WorkflowStepBuilderFinally";
 
-export abstract class Workflow<TData> {
+export abstract class Workflow<TContext, TResult> {
     public abstract id: string;
     public abstract version: string;
-    public abstract build(builder: IWorkflowBuilder<TData>): void;
+    public context: TContext;
+    private _builder: WorkflowBuilder<TContext, TResult> = null;
 
-    public data: TData;
-    private _builder: WorkflowBuilder<TData> = null;
-
-    public constructor(data: TData) {
-        this.data = data;
-        this._builder = new WorkflowBuilder(new WorkflowContext(data));
+    public constructor(data: TContext) {
+        this.context = data;
+        this._builder = new WorkflowBuilder<TContext, TResult>(new WorkflowContext(data));
         this.build(this._builder);
     }
 
-    public run(): Promise<TData> {
+    public abstract build(builder: IWorkflowBuilder<TContext, TResult>)
+        : IWorkflowStepBuilderFinally<any, TResult, TContext>;
+
+    public run(): Promise<TResult> {
         return this._builder.run();
     }
 }

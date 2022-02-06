@@ -1,12 +1,12 @@
 
-export interface IWorkflowContext<TData> {
-    data: TData
+export interface IWorkflowContext<TContext> {
+    data: TContext
 }
 
-export class WorkflowContext<TData> implements IWorkflowContext<TData> {
-    public data: TData;
+export class WorkflowContext<TContext> implements IWorkflowContext<TContext> {
+    public data: TContext;
 
-    public constructor(data: TData) {
+    public constructor(data: TContext) {
         this.data = data;
     }
 }
