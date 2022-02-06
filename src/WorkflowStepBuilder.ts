@@ -33,6 +33,14 @@ export class WorkflowStepBuilder<TInput, TOutput, TData> extends WorkflowStepBui
         return stepBuiler;
     }
 
+    // public segway<TNextOutput>(): IWorkflowStepBuilder<TOutput, TNextOutput, TData> {
+    //     let stepBuiler = new WorkflowStepBuilder(new step(), this, this.context);
+
+    //     this.nextStep = stepBuiler;
+
+    //     return stepBuiler;
+    // }
+
     public endWith(step: new () => WorkflowStep<TOutput, void, TData>): IWorkflowStepBuilderFinally<TOutput, TData> {
         let stepBuiler = new WorkflowStepBuilderFinally(new step(), this, this.context);
 

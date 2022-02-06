@@ -40,8 +40,7 @@ export class WorkflowBuilder<TData> implements IWorkflowBuilder<TData> {
                 }
 
                 resolve(this._context.data);
-            }
-            catch (error: any) {
+            } catch (error: any) {
                 reject(error);
             }
         });

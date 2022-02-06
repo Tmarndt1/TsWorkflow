@@ -1,5 +1,6 @@
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
-import { WorkflowContext } from "./WorkflowContext";
+import { IWorkflowContext, WorkflowContext } from "./WorkflowContext";
+import { WorkflowStep } from "./WorkflowStep";
 
 export abstract class Workflow<TData> {
     public abstract id: string;
