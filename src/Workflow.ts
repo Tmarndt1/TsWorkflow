@@ -10,7 +10,9 @@ export abstract class Workflow<TContext, TResult> {
 
     public constructor(data: TContext) {
         this.context = data;
+
         this._builder = new WorkflowBuilder<TContext, TResult>(new WorkflowContext(data));
+
         this.build(this._builder);
     }
 

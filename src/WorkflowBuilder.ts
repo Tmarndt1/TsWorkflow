@@ -10,7 +10,7 @@ export interface IWorkflowBuilder<TContext, TResult> {
 
 export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TContext, TResult> {
     private _context: WorkflowContext<TContext> = null;
-    private _firstStep: WorkflowStepBuilderBase<any, any, TContext> = null;
+    private _firstStep: WorkflowStepBuilderBase<any, any, TResult, TContext> = null;
 
     public constructor(context: WorkflowContext<TContext>) {
         this._context = context;
@@ -27,16 +27,14 @@ export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TCon
     public run(): Promise<TResult> {
         return new Promise(async (resolve, reject) => {
             try {
-                let step: WorkflowStepBuilderBase<any, any, TContext> = this._firstStep;
-                let output: TResult = null;
+                let step: WorkflowStepBuilderBase<any, any, TResult, TContext> = this._firstStep;
+                let output: any = null;
                 let iteration: number = 0;
 
-                while (step != null && ++iteration < 100) {
+                while (step?.hasNext() && ++iteration < 500) {
                     output = await step.run(output);
 
-                    step = step.nextStep;
-
-                    if (step.isFinal || step instanceof WorkflowStepBuilderFinally) break;
+                    step = step.getNext();
                 }
 
                 resolve(output);

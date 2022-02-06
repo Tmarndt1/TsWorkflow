@@ -2,7 +2,6 @@ import { Workflow } from "../src/Workflow";
 import { IWorkflowBuilder } from "../src/WorkflowBuilder";
 import { IWorkflowContext } from "../src/WorkflowContext";
 import { WorkflowStep } from "../src/WorkflowStep";
-import { IWorkflowStepBuilder } from "../src/WorkflowStepBuilder";
 
 /**
  * Workflow step that increments the Workflow context's age property by 1
