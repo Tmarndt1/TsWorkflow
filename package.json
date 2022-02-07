@@ -1,0 +1,27 @@
+{
+  "name": "tsworkflow",
+  "version": "1.0.0",
+  "description": "A workflow library for Typscript applications",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tmarndt1/TsWorkflow.git"
+  },
+  "author": "Travis Arndt",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Tmarndt1/TsWorkflow/issues"
+  },
+  "homepage": "https://github.com/Tmarndt1/TsWorkflow#readme",
+  "dependencies": {
+    "common-js": "^0.3.8",
+    "typescript": "^4.5.5"
+  }
+}

@@ -1,6 +1,6 @@
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
 import { WorkflowContext } from "./WorkflowContext";
-import { IWorkflowStepBuilderFinally } from "./WorkflowStepBuilderFinally";
+import { IWorkflowStepBuilderFinal } from "./WorkflowStepBuilderFinal";
 
 export abstract class Workflow<TContext, TResult> {
     public abstract id: string;
@@ -17,7 +17,7 @@ export abstract class Workflow<TContext, TResult> {
     }
 
     public abstract build(builder: IWorkflowBuilder<TContext, TResult>)
-        : IWorkflowStepBuilderFinally<any, TResult, TContext>;
+        : IWorkflowStepBuilderFinal<any, TResult, TContext>;
 
     public run(): Promise<TResult> {
         return this._builder.run();

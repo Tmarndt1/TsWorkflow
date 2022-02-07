@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "target": "es6",
+      "module": "commonjs",
+      "declaration": true,
+      "outDir": "./lib",
+      "strict": false,
+    },
+    "files": [
+        "examples/workflow1.ts"
+    ],
+    "include": ["src"],
+    "exclude": ["node_modules", "**/__tests__/*"]
+  }

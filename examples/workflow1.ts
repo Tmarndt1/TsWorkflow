@@ -6,7 +6,7 @@ import { WorkflowStep } from "../src/WorkflowStep";
 /**
  * Workflow step that increments the Workflow context's age property by 1
  */
-class UpdateAgeStep extends WorkflowStep<void, number, { age: number }> {
+class IncrementAge extends WorkflowStep<void, number, { age: number }> {
     public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
         return Promise.resolve(++context.data.age);
     }
@@ -15,22 +15,29 @@ class UpdateAgeStep extends WorkflowStep<void, number, { age: number }> {
 /**
  * Workflow step that alerts the Workflow's context age property
  */
-class AlertAgeStep extends WorkflowStep<number, number, { age: number }> {
+class PrintAge extends WorkflowStep<number, number, { age: number }> {
     public run(age: number, context: IWorkflowContext<{ age: number; }>): Promise<number> {
         return Promise.resolve(++age);
     }
 }
 
 /**
- * Simple age workflow example that increments an age and alerts it in the final step
+ * Simple age workflow example that increments an age and prints age in final step
  */
 class AgeWorkflow extends Workflow<{ age: number }, number> {
     public id: string = "age-workflow"
     public version: string = "1";
 
     public build(builder: IWorkflowBuilder<{ age: number; }, number>) {
-        return builder.startWith(UpdateAgeStep)
-            .endWith(AlertAgeStep);
+        return builder.startWith(IncrementAge)
+            .delay(500)
+            .if(x => x > 30)
+                .do(IncrementAge)
+            .delay(500)
+            .if (x => x > 31)
+                .do(IncrementAge)
+            .delay(500)
+            .endWith(PrintAge);
     }
 }
 
