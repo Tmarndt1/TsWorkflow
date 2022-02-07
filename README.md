@@ -14,9 +14,9 @@ class Birthday extends WorkflowStep<void, number, { age: number }> {
 /**
  * Workflow step that sends fake birthday email
  */
- class Highschool extends WorkflowStep<void, number, { age: number }> {
+class Highschool extends WorkflowStep<void, number, { age: number }> {
     public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
-        console.log("Contgratulations on graduating!");
+        console.log("Contgratulations on graduating Highschool!");
         return Promise.resolve(context.data.age);
     }
 }
@@ -24,9 +24,9 @@ class Birthday extends WorkflowStep<void, number, { age: number }> {
 /**
  * Workflow step that sends fake birthday email
  */
- class Retirement extends WorkflowStep<void, number, { age: number }> {
+class Retirement extends WorkflowStep<void, number, { age: number }> {
     public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
-        console.log("Contgratulations on retirement!");
+        console.log("Contgratulations on retiring!");
         return Promise.resolve(context.data.age);
     }
 }
@@ -49,11 +49,9 @@ class AgeWorkflow extends Workflow<{ age: number }, string> {
 
     public build(builder: IWorkflowBuilder<{ age: number; }, string>) {
         return builder.startWith(Birthday)
-            .delay(100)
-            .if (x => x > 18)
+            .if (x => x == 18)
                 .do(Highschool)
-            .delay(100)
-            .if(x => x > 60)
+            .if(x => x == 60)
                 .do(Retirement)
             .delay(100)
             .endWith(PrintAge);
@@ -61,7 +59,7 @@ class AgeWorkflow extends Workflow<{ age: number }, string> {
 }
 
 // Create new instance of the workflow
-let workflow: Workflow<{ age: number }, string> = new AgeWorkflow({ age: 18 });
+let workflow: Workflow<{ age: number }, string> = new AgeWorkflow({ age: 17 });
 
 // Run the workflow
 workflow.run().then(age => console.log(age));
