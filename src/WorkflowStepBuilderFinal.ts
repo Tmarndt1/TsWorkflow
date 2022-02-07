@@ -1,7 +1,7 @@
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
-import { WorkflowErrorOption, WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
+import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 
 export interface IWorkflowStepBuilderFinal<TInput, TResult, TContext> {
     

@@ -12,8 +12,6 @@ export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> extend
 }
 
 export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
-    private _conditionalFunc: (output: TOutput) => boolean;
-
     public constructor(step: WorkflowStep<TInput, TOutput, TContext>, last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>, context: WorkflowContext<TContext>) {
         super(step, last, context);
         this.currentStep = step;
@@ -24,9 +22,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
     public if<TNextOutput>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNextOutput, TResult, TContext> {
         if (func == null) throw new Error("Conditional function cannot be null");
         
-        this._conditionalFunc = func;
-
-        let stepBuiler = new WorkflowStepBuilderCondition(this, this.context);
+        let stepBuiler = new WorkflowStepBuilderCondition(this, this.context, func);
 
         this.nextStep = stepBuiler;
 

@@ -9,15 +9,18 @@ export interface IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContex
 }
 
 export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> {
-    public constructor(last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>, context: WorkflowContext<TContext>) {
+    private _conditionalFunc: (input: TInput) => boolean;
+
+    public constructor(last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>, context: WorkflowContext<TContext>, func: (input: TInput) => boolean) {
         super(null, last, context);
         this.lastStep = last;
         this.context = context;
+        this._conditionalFunc = func;
     }
 
     public do<TNextOutput>(step: new () => WorkflowStep<TOutput, TNextOutput, TContext>): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext> {
         if (step == null) throw new Error("Step cannot be null");
-        
+
         let stepBuiler = new WorkflowStepBuilder(new step(), this, this.context);
 
         this.nextStep = stepBuiler;
@@ -33,7 +36,11 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         return this.nextStep;
     }
 
-    public run(input: TInput): Promise<TOutput> { 
-        return this.nextStep.run(input as any);
+    public run(input: TInput): Promise<TOutput> {
+        if (!this._conditionalFunc(input)) {
+            return Promise.resolve(input as any);
+        } else {
+            return this.nextStep.run(input as any);
+        }
     }
 }
