@@ -1,10 +1,6 @@
 import { WorkflowContext } from "./WorkflowContext";
+import { WorkflowErrorHandler } from "./WorkflowErrorHandler";
 import { WorkflowStep } from "./WorkflowStep";
-
-export enum WorkflowErrorOption {
-    Retry,
-    Terminate
-}
 
 export interface IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
 
@@ -16,8 +12,8 @@ export abstract class WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext
     protected currentStep: WorkflowStep<TInput, TOutput, TContext> = null;
     protected context: WorkflowContext<TContext> = null;
     protected delayTime: number = 0;
-    protected errorOption: WorkflowErrorOption;
     protected retryMilliseconds: number = 0;
+    protected workflowErrorHandler: WorkflowErrorHandler = null;
 
     public constructor(step: WorkflowStep<TInput, TOutput, TContext>, last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext>) {
         this.currentStep = step;

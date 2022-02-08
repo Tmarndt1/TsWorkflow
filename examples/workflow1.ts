@@ -1,6 +1,7 @@
 import { Workflow } from "../src/Workflow";
 import { IWorkflowBuilder } from "../src/WorkflowBuilder";
 import { IWorkflowContext } from "../src/WorkflowContext";
+import { WorkflowErrorHandler } from "../src/WorkflowErrorHandler";
 import { WorkflowStep } from "../src/WorkflowStep";
 
 /**
@@ -44,23 +45,23 @@ class PrintAge extends WorkflowStep<number, string, { age: number }> {
 /**
  * Simple age workflow example that increments an age and prints age in final step
  */
-class AgeWorkflow extends Workflow<{ age: number }, string> {
+class Workflow1 extends Workflow<{ age: number }, string> {
     public id: string = "age-workflow"
     public version: string = "1";
 
     public build(builder: IWorkflowBuilder<{ age: number; }, string>) {
         return builder.startWith(Birthday)
-            .if (x => x == 18)
+            .if(x => x == 18)
                 .do(Highschool)
             .if(x => x == 60)
                 .do(Retirement)
-            .delay(100)
+                .delay(100)
             .endWith(PrintAge);
     }
 }
 
 // Create new instance of the workflow
-let workflow: Workflow<{ age: number }, string> = new AgeWorkflow({ age: 17 });
+let workflow: Workflow<{ age: number }, string> = new Workflow1({ age: 17 });
 
 // Run the workflow
 workflow.run().then(age => console.log(age));

@@ -7,7 +7,8 @@
       "strict": false,
     },
     "files": [
-        "examples/workflow1.ts"
+        "examples/workflow1.ts",
+        "examples/workflow2.ts"
     ],
     "include": ["src"],
     "exclude": ["node_modules", "**/__tests__/*"]

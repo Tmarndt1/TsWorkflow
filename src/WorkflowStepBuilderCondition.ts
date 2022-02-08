@@ -1,5 +1,5 @@
-import { IWorkflowBuilder } from "./WorkflowBuilder";
 import { WorkflowContext } from "./WorkflowContext";
+import { WorkflowErrorHandler } from "./WorkflowErrorHandler";
 import { WorkflowStep } from "./WorkflowStep";
 import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { IWorkflowStepBuilderBase, WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
@@ -16,7 +16,7 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         this.lastStep = last;
         this.context = context;
         this._conditionalFunc = func;
-    }
+    } 
 
     public do<TNextOutput>(step: new () => WorkflowStep<TOutput, TNextOutput, TContext>): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext> {
         if (step == null) throw new Error("Step cannot be null");
