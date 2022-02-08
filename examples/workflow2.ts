@@ -16,7 +16,7 @@ class Step2 extends WorkflowStep<void, void, void> {
             setTimeout(() => {
                 console.log("Step2 ran");
                 resolve();
-            }, 10000);
+            }, 4000);
         });
     }
 }

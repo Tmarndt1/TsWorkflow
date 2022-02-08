@@ -1,3 +1,4 @@
+import { CancellationToken } from "./CancellationTokenSource";
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
 import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
@@ -23,10 +24,10 @@ export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TCon
         return stepBuiler;
     }
 
-    public run(): Promise<TResult> {
+    public run(cancellationToken?: CancellationToken): Promise<TResult> {
         return new Promise((resolve, reject) => {
             try {
-                resolve(this._firstStep.run(null) as any as TResult);
+                resolve(this._firstStep.run(null, cancellationToken));
             } catch(error) {
                 reject(error);
             }

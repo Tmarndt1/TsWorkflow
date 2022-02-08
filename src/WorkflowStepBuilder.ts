@@ -1,3 +1,4 @@
+import { CancellationToken } from "./CancellationTokenSource";
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowErrorHandler } from "./WorkflowErrorHandler";
 import { WorkflowStep } from "./WorkflowStep";
@@ -6,7 +7,7 @@ import { IWorkflowStepBuilderCondition, WorkflowStepBuilderCondition } from "./W
 import { IWorkflowStepBuilderFinal, WorkflowStepBuilderFinal } from "./WorkflowStepBuilderFinal";
 
 export interface IWorkflowStepBuilderOnTimeout<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
-    onTimeout(step: { new(): WorkflowStep<TInput, TResult, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
+    onTimeout(step: { new(): WorkflowStep<TInput, TOutput, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
 }
 
 export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
@@ -21,7 +22,7 @@ export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> extend
 export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
     public id: string;
     private _timeout: number | null = null;
-    private _onTimeoutStep: WorkflowStep<TInput, TResult, TContext>;
+    private _onTimeoutStep: WorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
 
     public constructor(step: WorkflowStep<TInput, TOutput, TContext>, last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext>) {
         super(step, last, context);
@@ -35,7 +36,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
         return this;
     }
 
-    public onTimeout(step: new () => WorkflowStep<TInput, TResult, TContext>): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
+    public onTimeout(step: new () => WorkflowStep<TInput, TOutput, TContext>): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
         if (step == null) throw new Error("Step cannot be null");
         
         let stepBuiler = new WorkflowStepBuilder(new step(), this, this.context);
@@ -93,35 +94,48 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
         return this.nextStep;
     }
 
-    public run(input: TInput): Promise<TOutput> {
+    public run(input: TInput, cancellationToken: CancellationToken): Promise<TOutput> {
         let output: any = null;
+        let tMessage: string = `Step timed out after ${this._timeout} ms`;
 
         return new Promise((resolve, reject) => {
             try {
                 let timeout: number = null;
                 let delay: number = null;
+                let hasTimeout: boolean = this._timeout > 0 && this._onTimeoutStep != null;
+                let hasExpired: boolean = false;
 
-                if (this._timeout > 0 && this._onTimeoutStep != null) {
+                if (hasTimeout) {
                     timeout = setTimeout(() => {
-                        clearInterval(delay);
+                        hasExpired = true;
 
-                        this._onTimeoutStep.run(input, this.context);
-                        
-                        reject(`Promise timed out after ${this._timeout} ms`);
+                        clearTimeout(delay);
+
+                        this._onTimeoutStep.run(input, cancellationToken);
+
+                        reject(tMessage);
                     }, this._timeout);
                 }
     
                 delay = setTimeout(async () => {
+                    if (hasExpired) return reject(tMessage);
+
                     if (this.hasNext()) {
-                        output = await this.currentStep.run(input, this.context);
+                        output = await this.currentStep.run(input, this.context, cancellationToken);
+
+                        if (hasExpired) return reject(tMessage);
     
                         clearTimeout(timeout);
     
-                        output = await this.getNext().run(output);
+                        output = await this.getNext().run(output, cancellationToken);
+
+                        if (hasExpired) return reject(tMessage);
     
                         resolve(output);
                     } else {
-                        output = await this.currentStep.run(input, this.context);
+                        output = await this.currentStep.run(input, this.context, cancellationToken);
+
+                        if (hasExpired) return reject(tMessage);
     
                         clearTimeout(timeout);
     
