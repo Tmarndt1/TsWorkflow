@@ -4,8 +4,8 @@
       "module": "commonjs",
       "declaration": true,
       "outDir": "./lib",
-      "strict": true,
-      
+      "strict": false,
+
     },
     "files": [
         "examples/workflow1.ts",

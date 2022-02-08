@@ -1,4 +1,4 @@
-import { CancellationToken } from "./CancellationTokenSource";
+import CancellationTokenSource, { CancellationToken } from "./CancellationTokenSource";
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowErrorHandler } from "./WorkflowErrorHandler";
 import { WorkflowStep } from "./WorkflowStep";
@@ -26,5 +26,5 @@ export abstract class WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext
 
     public abstract hasNext(): boolean;
 
-    public abstract run(input: TInput, cancellationToken?: CancellationToken): Promise<TOutput>;
+    public abstract run(input: TInput, cts: CancellationTokenSource): Promise<TOutput>;
 }

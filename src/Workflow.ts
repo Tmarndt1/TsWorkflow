@@ -1,4 +1,4 @@
-import { CancellationToken } from "./CancellationTokenSource";
+import CancellationTokenSource, { CancellationToken } from "./CancellationTokenSource";
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
 import { WorkflowContext } from "./WorkflowContext";
 import { IWorkflowStepBuilderFinal } from "./WorkflowStepBuilderFinal";
@@ -20,7 +20,7 @@ export abstract class Workflow<TContext, TResult> {
     public abstract build(builder: IWorkflowBuilder<TContext, TResult>)
         : IWorkflowStepBuilderFinal<any, TResult, TContext>;
 
-    public run(cancellationToken?: CancellationToken): Promise<TResult> {
-        return this._builder.run(cancellationToken);
+    public run(cts?: CancellationTokenSource): Promise<TResult> {
+        return this._builder.run(cts ?? new CancellationTokenSource());
     }
 }

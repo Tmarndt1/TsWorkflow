@@ -1,3 +1,4 @@
+import CancellationTokenSource from "./CancellationTokenSource";
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowErrorHandler } from "./WorkflowErrorHandler";
 import { WorkflowStep } from "./WorkflowStep";
@@ -36,11 +37,11 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         return this.nextStep;
     }
 
-    public run(input: TInput): Promise<TOutput> {
+    public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
         if (!this._conditionalFunc(input)) {
             return Promise.resolve(input as any);
         } else {
-            return this.nextStep.run(input as any);
+            return this.nextStep.run(input as any, cts);
         }
     }
 }
