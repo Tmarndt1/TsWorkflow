@@ -1,21 +1,14 @@
 import { Workflow } from "../src/Workflow";
 import { IWorkflowBuilder } from "../src/WorkflowBuilder";
 import { IWorkflowContext } from "../src/WorkflowContext";
-import { WorkflowErrorHandler } from "../src/WorkflowErrorHandler";
 import { WorkflowStep } from "../src/WorkflowStep";
 
-/**
- * Workflow step that increments the Workflow context's age property by 1
- */
 class Birthday extends WorkflowStep<void, number, { age: number }> {
     public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
         return Promise.resolve(++context.data.age);
     }
 }
 
-/**
- * Workflow step that sends fake birthday email
- */
 class Highschool extends WorkflowStep<void, number, { age: number }> {
     public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
         console.log("Contgratulations on graduating Highschool!");
@@ -23,9 +16,6 @@ class Highschool extends WorkflowStep<void, number, { age: number }> {
     }
 }
 
-/**
- * Workflow step that sends fake birthday email
- */
 class Retirement extends WorkflowStep<void, number, { age: number }> {
     public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
         console.log("Contgratulations on retiring!");
@@ -33,9 +23,6 @@ class Retirement extends WorkflowStep<void, number, { age: number }> {
     }
 }
 
-/**
- * Workflow step that alerts the Workflow's context age property
- */
 class PrintAge extends WorkflowStep<number, string, { age: number }> {
     public run(age: number, context: IWorkflowContext<{ age: number; }>): Promise<string> {
         return Promise.resolve(`Age: ${age}`);

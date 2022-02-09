@@ -14,34 +14,38 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
 
     public constructor(last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>, context: WorkflowContext<TContext>, func: (input: TInput) => boolean) {
         super(null, last, context);
-        this.lastStep = last;
-        this.context = context;
+        this._lastStep = last;
+        this._context = context;
         this._conditionalFunc = func;
     } 
 
     public do<TNextOutput>(step: new () => WorkflowStep<TOutput, TNextOutput, TContext>): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext> {
         if (step == null) throw new Error("Step cannot be null");
 
-        let stepBuiler = new WorkflowStepBuilder(new step(), this, this.context);
+        let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);
 
-        this.nextStep = stepBuiler;
+        this._nextStep = stepBuiler;
 
         return stepBuiler;
     }
 
     public hasNext(): boolean {
-        return this.nextStep != null;
+        return this._nextStep != null;
     }
 
     public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> {
-        return this.nextStep;
+        return this._nextStep;
+    }
+
+    public getTimeout(): number | null {
+        return this._timeout;
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
         if (!this._conditionalFunc(input)) {
             return Promise.resolve(input as any);
         } else {
-            return this.nextStep.run(input as any, cts);
+            return this._nextStep.run(input as any, cts);
         }
     }
 }
