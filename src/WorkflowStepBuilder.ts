@@ -6,17 +6,12 @@ import { IWorkflowStepBuilderBase, WorkflowStepBuilderBase } from "./WorkflowSte
 import { IWorkflowStepBuilderCondition, WorkflowStepBuilderCondition } from "./WorkflowStepBuilderCondition";
 import { IWorkflowStepBuilderFinal, WorkflowStepBuilderFinal } from "./WorkflowStepBuilderFinal";
 
-export interface IWorkflowStepBuilderOnTimeout<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
-    onTimeout(step: { new(): WorkflowStep<TInput, TOutput, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
-}
-
 export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
     if<TNextOutput>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNextOutput, TResult, TContext>;
     then<TNextOutput>(step: { new(): WorkflowStep<TOutput, TNextOutput, TContext> }): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext>;
     endWith(step: { new(): WorkflowStep<TOutput, TResult, TContext> }): IWorkflowStepBuilderFinal<TOutput, TResult, TContext>;
     delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
-    timeout(milliseconds: number): IWorkflowStepBuilderOnTimeout<TInput, TOutput, TResult, TContext>;
-    onError(option: WorkflowErrorHandler): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
+    timeout(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
 }
 
 export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
@@ -29,7 +24,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
         this._context = context;
     }
     
-    public timeout(milliseconds: number ): IWorkflowStepBuilderOnTimeout<TInput, TOutput, TResult, TContext> {
+    public timeout(milliseconds: number ): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
         if (milliseconds < 1) throw Error("Timeout must be a postive integer");
         
         this._timeout = milliseconds;
@@ -44,12 +39,6 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
 
         this._onTimeoutStep = stepBuiler;
 
-        return this;
-    }
-
-    public onError(option: WorkflowErrorHandler): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
-        this._workflowErrorHandler = option;
-        
         return this;
     }
 
