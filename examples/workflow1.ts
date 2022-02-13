@@ -33,7 +33,7 @@ class PrintAge extends WorkflowStep<number, string, { age: number }> {
  * Simple age workflow example that increments an age and prints age in final step
  */
 class Workflow1 extends Workflow<{ age: number }, string> {
-    public id: string = "age-workflow"
+    public id: string = "workflow-1"
     public version: string = "1";
 
     public build(builder: IWorkflowBuilder<{ age: number; }, string>) {

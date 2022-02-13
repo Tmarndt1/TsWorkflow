@@ -25,7 +25,7 @@ export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TCon
         return stepBuiler;
     }
 
-    public run(cts?: CancellationTokenSource): Promise<TResult> {
+    public run(cts: CancellationTokenSource): Promise<TResult> {
         return new Promise(async (resolve, reject) => {
             let step = this._firstStep;
 

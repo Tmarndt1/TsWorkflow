@@ -4,83 +4,98 @@ import { IWorkflowBuilder } from "../src/WorkflowBuilder";
 import { IWorkflowContext } from "../src/WorkflowContext";
 import { WorkflowStep } from "../src/WorkflowStep";
 
-class Step1 extends WorkflowStep<void, void, void> {
-    public run(input: void, context: IWorkflowContext<void>, cts: CancellationTokenSource): Promise<void> {
-        if (cts.token.isCancelled()) return Promise.reject();
-
+class Step1 extends WorkflowStep {
+    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
+        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (cts.token.isCancelled()) reject();
+                if (context.cancellationTokenSource.token.isCancelled()) {
+                    reject();
+                } else {
+                    console.log("Step 1 ran...");
 
-                console.log("Step 1 ran");
-                resolve();
+                    resolve();
+                }
             }, 1000);
         });
     }
 }
 
-class Step2 extends WorkflowStep<void, void, void> {
-    public run(input: void, context: IWorkflowContext<void>, cts: CancellationTokenSource): Promise<void> {
-        if (cts.token.isCancelled()) return Promise.reject();
+class Step2 extends WorkflowStep {
+    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
+        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (cts.token.isCancelled()) reject();
+                if (context.cancellationTokenSource.token.isCancelled()) {
+                    reject();
+                } else {
+                    console.log("Step 2 ran...");
 
-                console.log("Step 2 ran");
-                resolve();
+                    resolve();
+                }
             }, 1000);
         });
     }
 }
 
-class Step3 extends WorkflowStep<void, void, void> {
-    public run(input: void, context: IWorkflowContext<void>, cts: CancellationTokenSource): Promise<void> {
-        if (cts.token.isCancelled()) return Promise.reject();
+class Step3 extends WorkflowStep {
+    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
+        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (cts.token.isCancelled()) reject();
+                if (context.cancellationTokenSource.token.isCancelled()) {
+                    reject();
+                } else {
+                    console.log("Step 3 ran...");
 
-                console.log("Step 3 ran");
-                resolve();
+                    resolve();
+                }
             }, 1000);
         });
     }
 }
 
-class Step4 extends WorkflowStep<void, void, void> {
-    public run(input: void, context: IWorkflowContext<void>, cts: CancellationTokenSource): Promise<void> {
-        if (cts.token.isCancelled()) return Promise.reject();
+class Step4 extends WorkflowStep {
+    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
+        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (cts.token.isCancelled()) reject();
+                if (context.cancellationTokenSource.token.isCancelled()) {
+                    reject();
+                } else {
+                    console.log("Step 4 ran...");
 
-                console.log("Step 4 ran");
-                resolve();
+                    resolve();
+                }
             }, 1000);
         });
     }
 }
 
-class TimeoutStep extends WorkflowStep<void, void, void> {
-    public run(input: void, context: IWorkflowContext<void>, cts: CancellationTokenSource): Promise<void> {
-        if (cts.token.isCancelled()) return Promise.reject();
+class TimeoutStep extends WorkflowStep {
+    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
+        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (cts.token.isCancelled()) reject();
+                if (context.cancellationTokenSource.token.isCancelled()) {
+                    reject();
+                } else {
+                    console.log("Timeout step ran...");
 
-                console.log("Timeout step ran");
-                resolve();
+                    resolve();
+                }
             }, 1000);
         });
     }
 }
 
-class Workflow2 extends Workflow<void, void> {
-    public id: string = "age-workflow"
+class Workflow2 extends Workflow {
+    public id: string = "workflow-2"
     public version: string = "1";
 
     public build(builder: IWorkflowBuilder<void, void>) {
@@ -97,7 +112,9 @@ class Workflow2 extends Workflow<void, void> {
 }
 
 // Create new instance of the workflow
-let workflow: Workflow<void, void> = new Workflow2();
+let workflow: Workflow = new Workflow2();
+
+let cts = new CancellationTokenSource();
 
 // Run the workflow
-workflow.run().then(age => console.log(age)).catch(error => console.log(error));
+workflow.run(cts).then(age => console.log(age)).catch(error => console.log(error));

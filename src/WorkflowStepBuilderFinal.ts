@@ -1,28 +1,42 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { WorkflowContext } from "./WorkflowContext";
-import { WorkflowErrorHandler } from "./WorkflowErrorHandler";
 import { WorkflowStep } from "./WorkflowStep";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 
 export interface IWorkflowStepBuilderFinal<TInput, TResult, TContext> {
-    onError(option: WorkflowErrorHandler): IWorkflowStepBuilderFinal<TInput, TResult, TContext>;
     /**
      * Timeout for the entire workflow. If the timeout expires the workflow will be cancelled.
      * @param {number} milliseconds The number of milliseconds until the workflow expires.
      */
     expire(milliseconds: number): IWorkflowStepBuilderFinal<TInput, TResult, TContext>;
+    failed(step: { new(): WorkflowStep<any, any, TContext> }): IWorkflowStepBuilderFinal<TInput, void, TContext>;
 }
 
 export class WorkflowStepBuilderFinal<TInput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TResult, TResult, TContext> implements IWorkflowStepBuilderFinal<TInput, TResult, TContext> {    
     private _expiration: number | null = null;
     private _onTimeoutStep: WorkflowStepBuilder<TInput, TResult, TResult, TContext>;
+    private _step: WorkflowStep<TInput, TResult, TContext>;
+    private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
 
-    public constructor(step: WorkflowStep<TInput, TResult, TContext>, last: WorkflowStepBuilder<any, any, TResult, TContext>, context: WorkflowContext<TContext>) {
-        super(step, last, context);
-        this._currentStep = step;
-        this._lastStep = last;
+    public constructor(step: WorkflowStep<TInput, TResult, TContext>, 
+        last: WorkflowStepBuilderBase<any, any, TResult, TContext>, 
+        context: WorkflowContext<TContext>) 
+    {
+        super(context);
+        this._step = step;
+        this._last = last;
         this._context = context;
+    }
+
+    public failed(step: new () => WorkflowStep<any, any, TContext>): IWorkflowStepBuilderFinal<TInput, void, TContext> {
+        if (step == null) throw new Error("Step cannot be null");
+        
+        let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);
+
+        this._errorStep = stepBuiler;
+
+        return this;
     }
     
     public expire(milliseconds: number): IWorkflowStepBuilderFinal<TInput, TResult, TContext> {
@@ -40,15 +54,9 @@ export class WorkflowStepBuilderFinal<TInput, TResult, TContext> extends Workflo
     public getTimeout(): number | null {
         return this._timeout;
     }
-    
-    public onError(option: WorkflowErrorHandler): IWorkflowStepBuilderFinal<TInput, TResult, TContext> {
-        this._workflowErrorHandler = option;
-        
-        return this;
-    }
 
     public hasNext(): boolean {
-        return this._nextStep != null;
+        return false;
     }
 
     public getNext(): WorkflowStepBuilderBase<TResult, any, TResult, TContext> {
@@ -61,11 +69,17 @@ export class WorkflowStepBuilderFinal<TInput, TResult, TContext> extends Workflo
 
             setTimeout(async () => {
                 try {
-                    let result: TResult = await this._currentStep.run(input, this._context, cts);
-
-                    resolve(result);
+                    resolve(await this._step.run(input, this._context));
                 } catch (error) {
-                    reject(error);
+                    if (this._errorStep != null) {
+                        try {
+                            await this._errorStep.run(input, cts);
+                        } catch (error) {
+                            return reject(error);
+                        }
+                    }
+
+                    return reject(error);
                 }
                 
             }, this._delayTime);

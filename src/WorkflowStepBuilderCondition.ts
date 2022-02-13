@@ -1,6 +1,5 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { WorkflowContext } from "./WorkflowContext";
-import { WorkflowErrorHandler } from "./WorkflowErrorHandler";
 import { WorkflowStep } from "./WorkflowStep";
 import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { IWorkflowStepBuilderBase, WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
@@ -10,13 +9,17 @@ export interface IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContex
 }
 
 export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> {
-    private _conditionalFunc: (input: TInput) => boolean;
+    private _condition: (input: TInput) => boolean;
+    private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
+    private _next: WorkflowStepBuilderBase<TOutput, any, TResult, TContext>;
 
-    public constructor(last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>, context: WorkflowContext<TContext>, func: (input: TInput) => boolean) {
-        super(null, last, context);
-        this._lastStep = last;
+    public constructor(last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>, 
+        context: WorkflowContext<TContext>, condition: (input: TInput) => boolean) 
+    {
+        super(context);
+        this._last = last;
         this._context = context;
-        this._conditionalFunc = func;
+        this._condition = condition;
     } 
 
     public do<TNextOutput>(step: new () => WorkflowStep<TOutput, TNextOutput, TContext>): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext> {
@@ -24,17 +27,17 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
 
         let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);
 
-        this._nextStep = stepBuiler;
+        this._next = stepBuiler;
 
         return stepBuiler;
     }
 
     public hasNext(): boolean {
-        return this._nextStep != null;
+        return this._next != null;
     }
 
     public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> {
-        return this._nextStep;
+        return this._next;
     }
 
     public getTimeout(): number | null {
@@ -42,10 +45,10 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
-        if (!this._conditionalFunc(input)) {
+        if (!this._condition(input)) {
             return Promise.resolve(input as any);
         } else {
-            return this._nextStep.run(input as any, cts);
+            return this._next.run(input as any, cts);
         }
     }
 }

@@ -1,15 +1,15 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
+import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { IWorkflowStepBuilderBase, WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 import { IWorkflowStepBuilderCondition, WorkflowStepBuilderCondition } from "./WorkflowStepBuilderCondition";
 import { IWorkflowStepBuilderFinal, WorkflowStepBuilderFinal } from "./WorkflowStepBuilderFinal";
-import { IWorkflowStepBuilderParallel, WorkflowStepBuilderParallel } from "./WorkflowStepBuilderParallel";
 
 type ReturnType<T> = T extends { new(): WorkflowStep<unknown, infer TOutput, unknown> }
     ? TOutput : null;
 
-export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
+export interface IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
     if<TNextOutput>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNextOutput, TResult, TContext>;
     then<TNextOutput>(step: { new(): WorkflowStep<TOutput, TNextOutput, TContext> }): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext>;
     endWith(step: { new(): WorkflowStep<TOutput, TResult, TContext> }): IWorkflowStepBuilderFinal<TOutput, TResult, TContext>;
@@ -19,17 +19,17 @@ export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> extend
     parallel<T extends { new(): WorkflowStep<any, any, TContext> }[] | []>(steps: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult, TContext>;
 }
 
-export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
-    private _step: WorkflowStep<TInput, TOutput, TContext>;
+export class WorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> {
+    private _steps: WorkflowStep<any, any, TContext>[];
     private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
     private _next: WorkflowStepBuilderBase<TOutput, any, TResult, TContext>;
 
-    public constructor(step: WorkflowStep<TInput, TOutput, TContext>,  
+    public constructor(steps: WorkflowStep<any, any, TContext>[],  
         last: WorkflowStepBuilderBase<any, any, TResult, TContext>, 
         context: WorkflowContext<TContext>) 
     {
         super(context);
-        this._step = step;
+        this._steps = steps;
         this._last = last;
         this._context = context;
     }
@@ -56,7 +56,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
         return this;
     }
     
-    public timeout(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
+    public timeout(milliseconds: number ): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
         if (milliseconds < 1) throw Error("Timeout must be a postive integer");
         
         this._timeout = milliseconds;
@@ -142,7 +142,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
 
                     if (this.hasNext()) {
                         try {
-                            output = await this._step.run(input, this._context);
+                            output = await Promise.all(this._steps.map(x => x.run(input, this._context)));
                         } catch (error) {
                             if (this._errorStep != null) {
                                 try {
@@ -170,7 +170,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
                         resolve(output);
                     } else {
                         try {
-                            output = await this._step.run(input, this._context);
+                            output = await Promise.all(this._steps.map(x => x.run(input, this._context)));
                         } catch (error) {
                             reject(error);
                         }

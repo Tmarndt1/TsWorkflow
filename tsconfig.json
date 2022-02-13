@@ -9,7 +9,9 @@
     },
     "files": [
         "examples/workflow1.ts",
-        "examples/workflow2.ts"
+        "examples/workflow2.ts",
+        "examples/workflow3.ts",
+        "examples/workflow4.ts"
     ],
     "include": ["src"],
     "exclude": ["node_modules", "**/__tests__/*"]

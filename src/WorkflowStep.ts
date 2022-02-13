@@ -1,6 +1,5 @@
-import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowContext } from "./WorkflowContext";
 
-export abstract class WorkflowStep<TInput, TOutput, TContext> {
-    public abstract run(input: TInput, context: IWorkflowContext<TContext>, cts?: CancellationTokenSource): Promise<TOutput>;
+export abstract class WorkflowStep<TInput = void, TOutput = void, TContext = void> {
+    public abstract run(input: TInput, context: IWorkflowContext<TContext>): Promise<TOutput>;
 }

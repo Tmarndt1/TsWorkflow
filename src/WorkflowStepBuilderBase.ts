@@ -1,6 +1,6 @@
 import CancellationTokenSource, { CancellationToken } from "./CancellationTokenSource";
+import { ErrorHandler } from "./ErrorHandler";
 import { WorkflowContext } from "./WorkflowContext";
-import { WorkflowErrorHandler } from "./WorkflowErrorHandler";
 import { WorkflowStep } from "./WorkflowStep";
 
 export interface IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
@@ -8,18 +8,16 @@ export interface IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
 }
 
 export abstract class WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
-    protected _lastStep: WorkflowStepBuilderBase<any, TInput, TResult, TContext> = null;
-    protected _nextStep: WorkflowStepBuilderBase<TOutput, any, TResult, TContext> = null;
-    protected _currentStep: WorkflowStep<TInput, TOutput, TContext> = null;
     protected _context: WorkflowContext<TContext> = null;
     protected _delayTime: number = 0;
     protected _retryMilliseconds: number = 0;
-    protected _workflowErrorHandler: WorkflowErrorHandler = null;
+    protected _errorHandler: ErrorHandler = null;
     protected _timeout: number | null = null;
+    protected _cancellationTokenSource: CancellationTokenSource = null;
+    protected _errorStep: WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext>;
 
-    public constructor(step: WorkflowStep<TInput, TOutput, TContext>, last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext>) {
-        this._currentStep = step;
-        this._lastStep = last; 
+    public constructor(context: WorkflowContext<TContext>) 
+    {
         this._context = context;
     }
 
