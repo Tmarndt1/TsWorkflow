@@ -9,9 +9,15 @@ import { IWorkflowStepBuilderParallel, WorkflowStepBuilderParallel } from "./Wor
 type ReturnType<T> = T extends { new(): WorkflowStep<unknown, infer TOutput, unknown> }
     ? TOutput : null;
 
+export interface IWorkflowStepBuilderBasic<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
+    then<TNext>(step: { new(): WorkflowStep<TOutput, TNext, TContext> }): IWorkflowStepBuilder<TOutput, TNext, TResult, TContext>;
+    endWith(step: { new(): WorkflowStep<TOutput, TResult, TContext> }): IWorkflowStepBuilderFinal<TOutput, TResult, TContext>;
+    parallel<T extends { new(): WorkflowStep<any, any, TContext> }[] | []>(steps: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult, TContext>;
+}
+
 export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
-    if<TNextOutput>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNextOutput, TResult, TContext>;
-    then<TNextOutput>(step: { new(): WorkflowStep<TOutput, TNextOutput, TContext> }): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext>;
+    if<TNext>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext>;
+    then<TNext>(step: { new(): WorkflowStep<TOutput, TNext, TContext> }): IWorkflowStepBuilder<TOutput, TNext, TResult, TContext>;
     endWith(step: { new(): WorkflowStep<TOutput, TResult, TContext> }): IWorkflowStepBuilderFinal<TOutput, TResult, TContext>;
     delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
     timeout(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
@@ -64,10 +70,10 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
         return this;
     }
 
-    public if<TNextOutput>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNextOutput, TResult, TContext> {
-        if (func == null) throw new Error("Conditional function cannot be null");
+    public if<TNext>(expression: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext> {
+        if (expression == null) throw new Error("Conditional function cannot be null");
         
-        let stepBuiler = new WorkflowStepBuilderCondition(this, this._context, func);
+        let stepBuiler = new WorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext>(this, this._context, expression);
 
         this._next = stepBuiler;
 
@@ -80,7 +86,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
         return this;
     }
 
-    public then<TNextOutput>(step: new () => WorkflowStep<TOutput, TNextOutput, TContext>): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext> {
+    public then<TNext>(step: new () => WorkflowStep<TOutput, TNext, TContext>): IWorkflowStepBuilder<TOutput, TNext, TResult, TContext> {
         if (step == null) throw new Error("Step cannot be null");
         
         let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);

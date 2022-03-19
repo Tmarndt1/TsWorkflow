@@ -1,11 +1,11 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
-import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { IWorkflowStepBuilderBase, WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
+import { IWorkflowStepBuilderConditionChain, OrType, WorkflowStepBuilderConditionChain } from "./WorkflowStepBuilderConditionChain";
 
 export interface IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
-    do<TNextOutput>(step: new () => WorkflowStep<TOutput, TNextOutput, TContext>): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext>;
+    do<TNext>(step: new () => WorkflowStep<TOutput, TNext, TContext>): IWorkflowStepBuilderConditionChain<TOutput, TNext, TResult, TContext, OrType<TNext, TNext>>;
 }
 
 export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> {
@@ -22,10 +22,10 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         this._condition = condition;
     } 
 
-    public do<TNextOutput>(step: new () => WorkflowStep<TOutput, TNextOutput, TContext>): IWorkflowStepBuilder<TOutput, TNextOutput, TResult, TContext> {
+    public do<TNext>(step: new () => WorkflowStep<TOutput, TNext, TContext>): IWorkflowStepBuilderConditionChain<TOutput, TNext, TResult, TContext, OrType<TNext, TNext>> {
         if (step == null) throw new Error("Step cannot be null");
 
-        let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);
+        let stepBuiler = new WorkflowStepBuilderConditionChain<TOutput, TNext, TResult, TContext, OrType<TNext, TNext>>(new step(), this, this._context);
 
         this._next = stepBuiler;
 
