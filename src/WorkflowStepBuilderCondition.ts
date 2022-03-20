@@ -12,15 +12,38 @@ enum ConditionType {
 }
 
 interface ICondition {
+    delay: number | null;
     type: ConditionType,
-    condition: (args: any) => boolean;
     step: WorkflowStep<unknown, unknown, unknown>;
+    condition: (args: any) => boolean | null;
+}
+
+/**
+ * Interface that defines the aggregate method
+ */
+export interface IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult, TContext> {
+    /**
+     * Aggregates the conditional results
+     */
+    aggregate(): IWorkflowStepBuilderBasic<void, TOutput, TResult, TContext>;
 }
 
 /**
  * Interface that defines the methods after if/do is established within a workflow
  */
-export interface IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext> {
+export interface IWorkflowStepBuilderConditionElseDo<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult, TContext> {
+    delay(milliseconds: number): IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult, TContext>;
+}
+
+export interface IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext> {
+    do<TNext>(step: new () => WorkflowStep<TInput, TNext, TContext>): IWorkflowStepBuilderConditionElseDo<TInput, TOutput | TNext, TResult, TContext>;
+}
+
+/**
+ * Interface that defines the methods after if/do is established within a workflow
+ */
+export interface IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult, TContext> {
+    delay(milliseconds: number): IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext>;
     /**
      * Conditional method that will run a step if the expression equates to true
      * @param expression The expression to evaluate
@@ -30,11 +53,7 @@ export interface IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TCont
      * 
      * @param expression 
      */
-    else(): IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext>;
-    /**
-     * Aggregates the conditional results
-     */
-    aggregate(): IWorkflowStepBuilderBasic<void, TOutput, TResult, TContext>;
+    else(): IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext>;
 }
 
 /**
@@ -48,7 +67,8 @@ export interface IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContex
  * WorkflowStepBuilderCondition class provides the conditional capabilities
  */
 export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> 
-    implements IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext>, IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext> {
+    implements IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext>, IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext>,
+        IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext>, IWorkflowStepBuilderConditionElseDo<TInput, TOutput, TResult, TContext> {
             
     private _maps: ICondition[] = [];
 
@@ -65,10 +85,17 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         this._last = last;
         this._context = context;
         this._maps.push({
+            delay: null,
             type: ConditionType.If,
             condition: condition,
             step: null
         });
+    }
+    
+    public delay(milliseconds: number): IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext> {
+        this._current.delay = milliseconds;
+
+        return this;
     }
     
     public do<TNext>(step: new () => WorkflowStep<TInput, TNext, TContext>): IWorkflowStepBuilderConditionIf<TInput, TOutput | TNext, TResult, TContext> {
@@ -89,6 +116,7 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         if (expression == null) throw new Error("Expression function cannot be null");
         
         this._maps.push({
+            delay: null,
             type: ConditionType.ElseIf,
             condition: expression,
             step: null
@@ -97,8 +125,9 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         return this;
     }
 
-    public else(): IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> {        
+    public else(): IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext> {        
         this._maps.push({
+            delay: null,
             type: ConditionType.Else,
             condition: null,
             step: null
@@ -113,7 +142,6 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
 
     public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> {
         return this._next;
-        
     }
 
     public getTimeout(): number | null {
@@ -124,15 +152,27 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         for (let i = 0; i < this._maps.length; i++) {
             if (this._maps[i].type === ConditionType.Else || this._maps[i].condition != null && this._maps[i].condition(input)) {
                 try {
-                    let result: TOutput = await this._maps[i].step.run(input, this._context) as TOutput;
+                    if (this._maps[i].delay != null) {
+                        return new Promise((resolve, reject) => {
+                            setTimeout(async () => {
+                                let result: TOutput = await this._maps[i].step.run(input, this._context) as TOutput;
+                                
+                                let nextResult = await this.getNext().run(result, cts);
 
-                    return this.getNext().run(result, cts);
+                                resolve(nextResult);       
+                            }, this._maps[i].delay);
+                        });
+                    } else {
+                        let result: TOutput = await this._maps[i].step.run(input, this._context) as TOutput;
+
+                        return this.getNext().run(result, cts);
+                    }
                 } catch (error) {
                     return Promise.reject(error);
                 }
-            } else {
-                return Promise.reject("There was an internal error");
             }
         }
+
+        return Promise.reject("There was an internal error");
     }
 }

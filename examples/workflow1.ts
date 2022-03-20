@@ -30,6 +30,13 @@ class Retirement extends WorkflowStep<number, number, { age: number }> {
     }
 }
 
+class UnknownAge extends WorkflowStep<number, number, { age: number }> {
+    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<number> {
+        console.log("Who knows...");
+        return Promise.resolve(context.data.age);
+    }
+}
+
 class PrintAge extends WorkflowStep<number, string, { age: number }> {
     public run(age: number, context: IWorkflowContext<{ age: number; }>): Promise<string> {
         return Promise.resolve(`Age: ${age}`);
@@ -49,15 +56,18 @@ class Workflow1 extends Workflow<{ age: number }, string> {
                 .do(Highschool)
             .elseIf(x => x == 22)
                 .do(College)
-            .else()
+            .elseIf(x => x == 60)
                 .do(Retirement)
+            .else()
+                .do(UnknownAge)
+                    .delay(3000)
             .aggregate()
             .endWith(PrintAge);
     }
 }
 
 // Create new instance of the workflow
-let workflow: Workflow<{ age: number }, string> = new Workflow1({ age: 17 });
+let workflow: Workflow<{ age: number }, string> = new Workflow1({ age: 100 });
 
 // Run the workflow
 workflow.run().then(age => console.log(age));
