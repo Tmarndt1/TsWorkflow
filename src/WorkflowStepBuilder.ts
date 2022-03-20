@@ -16,13 +16,12 @@ export interface IWorkflowStepBuilderBasic<TInput, TOutput, TResult, TContext> e
 }
 
 export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
-    if<TNext>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext>;
+    if(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TOutput, TResult, TContext>;
     then<TNext>(step: { new(): WorkflowStep<TOutput, TNext, TContext> }): IWorkflowStepBuilder<TOutput, TNext, TResult, TContext>;
     endWith(step: { new(): WorkflowStep<TOutput, TResult, TContext> }): IWorkflowStepBuilderFinal<TOutput, TResult, TContext>;
     delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
     timeout(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
     failed(step: { new(): WorkflowStep<any, any, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
-    parallel<T extends { new(): WorkflowStep<any, any, TContext> }[] | []>(steps: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult, TContext>;
 }
 
 export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
@@ -70,10 +69,10 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
         return this;
     }
 
-    public if<TNext>(expression: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext> {
-        if (expression == null) throw new Error("Conditional function cannot be null");
+    public if(expression: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TOutput, TResult, TContext> {
+        if (expression == null) throw new Error("Expression function cannot be null");
         
-        let stepBuiler = new WorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext>(this, this._context, expression);
+        let stepBuiler = new WorkflowStepBuilderCondition<TOutput, TOutput, TResult, TContext>(this, this._context, expression);
 
         this._next = stepBuiler;
 

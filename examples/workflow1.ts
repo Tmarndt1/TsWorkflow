@@ -9,15 +9,15 @@ class Birthday extends WorkflowStep<void, number, { age: number }> {
     }
 }
 
-class Highschool extends WorkflowStep<void, string, { age: number }> {
-    public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<string> {
+class Highschool extends WorkflowStep<number, string, { age: number }> {
+    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
         console.log("Contgratulations on graduating Highschool!");
         return Promise.resolve(context.data.age.toString());
     }
 }
 
-class Retirement extends WorkflowStep<void, number, { age: number }> {
-    public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
+class Retirement extends WorkflowStep<number, number, { age: number }> {
+    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<number> {
         console.log("Contgratulations on retiring!");
         return Promise.resolve(context.data.age);
     }
@@ -37,19 +37,12 @@ class Workflow1 extends Workflow<{ age: number }, string> {
     public version: string = "1";
 
     public build(builder: IWorkflowBuilder<{ age: number; }, string>) {
-        var x = builder.startWith(Birthday)
-        .if(x => x == 18)
-            .do(Highschool)
-        .if(x => x == 60)
-            .do(Retirement)
-        .unwrap();
-
         return builder.startWith(Birthday)
             .if(x => x == 18)
                 .do(Highschool)
             .if(x => x == 60)
                 .do(Retirement)
-            .unwrap()
+            .aggregate()
             .endWith(PrintAge);
     }
 }
