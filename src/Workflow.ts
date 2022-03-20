@@ -23,7 +23,7 @@ export abstract class Workflow<TContext = void, TResult = void> {
     public run(cts?: CancellationTokenSource): Promise<TResult> {
         cts = cts ?? new CancellationTokenSource();
 
-        this._context.setCancellationTokenSource(cts);
+        this._context.setCts(cts);
 
         return this._builder.run(cts);
     }

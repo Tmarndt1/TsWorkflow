@@ -16,6 +16,13 @@ class Highschool extends WorkflowStep<number, string, { age: number }> {
     }
 }
 
+class College extends WorkflowStep<number, string, { age: number }> {
+    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
+        console.log("Contgratulations on graduating College!");
+        return Promise.resolve(context.data.age.toString());
+    }
+}
+
 class Retirement extends WorkflowStep<number, number, { age: number }> {
     public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<number> {
         console.log("Contgratulations on retiring!");
@@ -40,7 +47,9 @@ class Workflow1 extends Workflow<{ age: number }, string> {
         return builder.startWith(Birthday)
             .if(x => x == 18)
                 .do(Highschool)
-            .if(x => x == 60)
+            .elseIf(x => x == 22)
+                .do(College)
+            .else()
                 .do(Retirement)
             .aggregate()
             .endWith(PrintAge);

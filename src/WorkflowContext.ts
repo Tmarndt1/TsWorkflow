@@ -13,7 +13,7 @@ export class WorkflowContext<TContext> implements IWorkflowContext<TContext> {
         this.data = data;
     }
 
-    public setCancellationTokenSource(cts: CancellationTokenSource) {
+    public setCts(cts: CancellationTokenSource) {
         this.cancellationTokenSource = cts;
     }
 }

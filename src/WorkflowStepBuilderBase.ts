@@ -1,13 +1,8 @@
-import CancellationTokenSource, { CancellationToken } from "./CancellationTokenSource";
+import CancellationTokenSource from "./CancellationTokenSource";
 import { ErrorHandler } from "./ErrorHandler";
 import { WorkflowContext } from "./WorkflowContext";
-import { WorkflowStep } from "./WorkflowStep";
 
-export interface IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
-
-}
-
-export abstract class WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
+export abstract class WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
     protected _context: WorkflowContext<TContext> = null;
     protected _delayTime: number = 0;
     protected _retryMilliseconds: number = 0;
