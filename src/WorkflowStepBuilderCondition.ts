@@ -13,6 +13,7 @@ enum ConditionType {
 
 interface ICondition {
     delay: number | null;
+    timeout: number | null;
     type: ConditionType,
     step: WorkflowStep<unknown, unknown, unknown>;
     condition: (args: any) => boolean | null;
@@ -32,10 +33,24 @@ export interface IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult
  * Interface that defines the methods after if/do is established within a workflow
  */
 export interface IWorkflowStepBuilderConditionElseDo<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult, TContext> {
-    delay(milliseconds: number): IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult, TContext>;
+    /**
+     * Delays the step
+     * @param {number} milliseconds the time in milliseconds to delay the step
+     */
+    delay(milliseconds: number): IWorkflowStepBuilderConditionElseDo<TInput, TOutput, TResult, TContext>;
+    /**
+     * Defines the amount of time the step will timeout after
+     * @param {number} milliseconds the time in milliseconds the step will timeout after
+     */
+    timeout(milliseconds: number): IWorkflowStepBuilderConditionElseDo<TInput, TOutput, TResult, TContext>;
+    
 }
 
 export interface IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext> {
+    /**
+     * Defines the step to run
+     * @param {new () => WorkflowStep<TInput, TNext, TContext>} step the step to run
+     */
     do<TNext>(step: new () => WorkflowStep<TInput, TNext, TContext>): IWorkflowStepBuilderConditionElseDo<TInput, TOutput | TNext, TResult, TContext>;
 }
 
@@ -43,7 +58,16 @@ export interface IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TCo
  * Interface that defines the methods after if/do is established within a workflow
  */
 export interface IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext> extends IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult, TContext> {
+    /**
+     * Delays the step
+     * @param {number} milliseconds the time in milliseconds to delay the step
+     */
     delay(milliseconds: number): IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext>;
+    /**
+     * Defines the amount of time the step will timeout after
+     * @param {number} milliseconds the time in milliseconds the step will timeout after
+     */
+    timeout(milliseconds: number): IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext>;
     /**
      * Conditional method that will run a step if the expression equates to true
      * @param expression The expression to evaluate
@@ -60,6 +84,10 @@ export interface IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TCont
  * Interface that defines the basic methods on a conditional workflow
  */
 export interface IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> {
+    /**
+     * Defines the step to run if the condition is true
+     * @param {new () => WorkflowStep<TInput, TNext, TContext>} step the step to run if the condition is true
+     */
     do<TNext>(step: new () => WorkflowStep<TInput, TNext, TContext>): IWorkflowStepBuilderConditionIf<TInput, TOutput | TNext, TResult, TContext>;
 }
 
@@ -86,13 +114,20 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         this._context = context;
         this._maps.push({
             delay: null,
+            timeout: null,
             type: ConditionType.If,
             condition: condition,
             step: null
         });
     }
     
-    public delay(milliseconds: number): IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext> {
+    public timeout(milliseconds: number): any {
+        this._current.timeout = milliseconds;
+
+        return this;
+    }
+    
+    public delay(milliseconds: number): any {
         this._current.delay = milliseconds;
 
         return this;
@@ -117,6 +152,7 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         
         this._maps.push({
             delay: null,
+            timeout: null,
             type: ConditionType.ElseIf,
             condition: expression,
             step: null
@@ -128,6 +164,7 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
     public else(): IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext> {        
         this._maps.push({
             delay: null,
+            timeout: null,
             type: ConditionType.Else,
             condition: null,
             step: null
@@ -148,30 +185,57 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         return this._timeout;
     }
 
-    public async run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
-        for (let i = 0; i < this._maps.length; i++) {
-            if (this._maps[i].type === ConditionType.Else || this._maps[i].condition != null && this._maps[i].condition(input)) {
-                try {
-                    if (this._maps[i].delay != null) {
-                        return new Promise((resolve, reject) => {
-                            setTimeout(async () => {
-                                let result: TOutput = await this._maps[i].step.run(input, this._context) as TOutput;
-                                
-                                let nextResult = await this.getNext().run(result, cts);
+    public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
+        return new Promise(async (resolve, reject) => {
+            for (let i = 0; i < this._maps.length; i++) {
+                if (this._maps[i].type === ConditionType.Else || this._maps[i].condition != null && this._maps[i].condition(input)) {
+                    try {
+                        let timeoutMessage: string = `Step timed out after ${this._maps[i].timeout} ms`;
 
-                                resolve(nextResult);       
-                            }, this._maps[i].delay);
-                        });
-                    } else {
-                        let result: TOutput = await this._maps[i].step.run(input, this._context) as TOutput;
+                        let timeout: number = null;
+                        let delay: number = null;
+                        let hasTimeout: boolean = this._maps[i].timeout > 0;
+                        let hasExpired: boolean = false;
+    
+                        if (hasTimeout) {
+                            timeout = setTimeout(async () => {
+                                hasExpired = true;
+    
+                                cts.cancel();
+    
+                                clearTimeout(delay);
+    
+                                reject(timeoutMessage);
+                            }, this._maps[i].timeout);
+                        }
 
-                        return this.getNext().run(result, cts);
+                        if (this._maps[i].delay != null) {
+                            return new Promise((resolve, reject) => {
+                                setTimeout(async () => {
+                                    let result: TOutput = await this._maps[i].step.run(input, this._context) as TOutput;
+
+                                    if (hasExpired) return reject(timeoutMessage);
+
+                                    clearTimeout(timeout);
+                                    
+                                    let nextResult = await this.getNext().run(result, cts);
+    
+                                    resolve(nextResult);       
+                                }, this._maps[i].delay);
+                            });
+                        } else {
+                            let result: TOutput = await this._maps[i].step.run(input, this._context) as TOutput;
+    
+                            return this.getNext().run(result, cts);
+                        }
+                        
+                    } catch (error) {
+                        return Promise.reject(error);
                     }
-                } catch (error) {
-                    return Promise.reject(error);
                 }
             }
-        }
+        });
+        
 
         return Promise.reject("There was an internal error");
     }

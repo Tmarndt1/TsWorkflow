@@ -10,7 +10,7 @@ class Step1 extends WorkflowStep {
         
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                reject();
+                reject("Workflow error");
             }, 1000);
         });
     }
@@ -34,15 +34,9 @@ class Step2 extends WorkflowStep {
 
 class Report extends WorkflowStep {
     public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
-
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (context.cancellationTokenSource.token.isCancelled()) {
-                    reject();
-                } else {
-                    resolve(console.log("Step 1 failed..."));
-                } 
+                resolve(console.log("Step 1 failed...")); 
             }, 1000);
         });
     }

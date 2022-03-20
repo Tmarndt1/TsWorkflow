@@ -61,6 +61,7 @@ class Workflow1 extends Workflow<{ age: number }, string> {
             .else()
                 .do(UnknownAge)
                     .delay(3000)
+                    .timeout(1000)
             .aggregate()
             .endWith(PrintAge);
     }

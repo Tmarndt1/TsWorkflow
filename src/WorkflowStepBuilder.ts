@@ -26,10 +26,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
     private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
     private _next: WorkflowStepBuilderBase<TOutput, any, TResult, TContext>;
 
-    public constructor(step: WorkflowStep<TInput, TOutput, TContext>,  
-        last: WorkflowStepBuilderBase<any, any, TResult, TContext>, 
-        context: WorkflowContext<TContext>) 
-    {
+    public constructor(step: WorkflowStep<TInput, TOutput, TContext>,  last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext>) {
         super(context);
         this._step = step;
         this._last = last;
@@ -142,48 +139,37 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
                 delay = setTimeout(async () => {
                     if (hasExpired) return reject(timeoutMessage);
 
-                    if (this.hasNext()) {
-                        try {
-                            output = await this._step.run(input, this._context);
-                        } catch (error) {
-                            if (this._errorStep != null) {
-                                try {
-                                    await this._errorStep.run(input, cts);
-                                } catch (error) {
-                                    return reject(error);
-                                }
-                            }
+                    try {
+                        output = await this._step.run(input, this._context);
 
-                            return reject(error);
+                        if (hasExpired) {
+                            return reject(timeoutMessage);
+                        } else {
+                            clearTimeout(timeout);
                         }
+                    } catch (error) {
+                        if (this._errorStep != null) {
+                            try {
+                                clearTimeout(timeout);
 
-                        if (hasExpired) return reject(timeoutMessage);
-    
-                        clearTimeout(timeout);
+                                return resolve(await this._errorStep.run(input, cts));
+                            } catch (error) {
+                                return reject(error);
+                            }
+                        }
+                    }
 
+                    if (this.hasNext()) {
                         try {
                             output = await this.getNext().run(output, cts);
                         } catch (error) {
                             reject(error);
                         }
-
-                        if (hasExpired) return reject(timeoutMessage);
-    
-                        resolve(output);
-                    } else {
-                        try {
-                            output = await this._step.run(input, this._context);
-                        } catch (error) {
-                            reject(error);
-                        }
-
-                        if (hasExpired) return reject(timeoutMessage);
-    
-                        clearTimeout(timeout);
-    
-                        resolve(output);
                     }
-                }, this._delayTime);
+
+                    resolve(output);
+
+                }, this._delayTime ?? 0);
             } catch (error) {
                 reject(error);
             }
