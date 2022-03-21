@@ -210,23 +210,27 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
                         }
 
                         if (this._maps[i].delay != null) {
-                            return new Promise((resolve, reject) => {
-                                setTimeout(async () => {
-                                    let result: TOutput = await this._maps[i].step?.run(input, this._context) as TOutput;
+                            setTimeout(async () => {
+                                let result: TOutput = await this._maps[i].step?.run(input, this._context) as TOutput;
 
-                                    if (hasExpired) return reject(timeoutMessage);
+                                if (hasExpired) return reject(timeoutMessage);
 
-                                    if (delay != null) clearTimeout(delay);
-                                    
-                                    let nextResult = await this.getNext()?.run(result, cts);
-    
-                                    resolve(nextResult);       
-                                }, this._maps[i].delay ?? 0);
-                            });
+                                if (delay != null) clearTimeout(delay);
+                                
+                                let nextResult = await this.getNext()?.run(result, cts);
+
+                                resolve(nextResult);       
+                            }, this._maps[i].delay ?? 0);
                         } else {
                             let result: TOutput = await this._maps[i].step?.run(input, this._context) as TOutput;
-    
-                            return this.getNext()?.run(result, cts);
+
+                            if (hasExpired) return reject(timeoutMessage);
+
+                            if (delay != null) clearTimeout(delay);
+                            
+                            let nextResult = await this.getNext()?.run(result, cts);
+
+                            resolve(nextResult); 
                         }
                         
                     } catch (error) {
@@ -234,9 +238,8 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
                     }
                 }
             }
-        });
-        
 
-        return Promise.reject("There was an internal error");
+            reject("There was an internal error");
+        });
     }
 }

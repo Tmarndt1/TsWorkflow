@@ -5,37 +5,37 @@ import { WorkflowStep } from "../src/WorkflowStep";
 
 class Birthday extends WorkflowStep<void, number, { age: number }> {
     public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
-        return Promise.resolve(context?.data?.age ? context.data.age++ : 0);
+        return Promise.resolve(context?.data?.age ? ++context.data.age : 0);
     }
 }
 
 class Highschool extends WorkflowStep<number, string, { age: number }> {
-    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
+    public run(age: number): Promise<string> {
         return Promise.resolve("Contgratulations on graduating Highschool!");
     }
 }
 
 class College extends WorkflowStep<number, string, { age: number }> {
-    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
+    public run(age: number): Promise<string> {
         return Promise.resolve("Contgratulations on graduating College!");
     }
 }
 
 class Retirement extends WorkflowStep<number, string, { age: number }> {
-    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
+    public run(age: number): Promise<string> {
         return Promise.resolve("Contgratulations on retiring!");
     }
 }
 
 class UnknownAge extends WorkflowStep<number, string, { age: number }> {
-    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
+    public run(age: number): Promise<string> {
         return Promise.resolve("Who knows...");
     }
 }
 
-class PrintAge extends WorkflowStep<number | string, string, { age: number }> {
-    public run(age: number, context: IWorkflowContext<{ age: number; }>): Promise<string> {
-        return Promise.resolve(`Age: ${age}`);
+class PrintAge extends WorkflowStep<string, string, { age: number }> {
+    public run(result: string): Promise<string> {
+        return Promise.resolve(result);
     }
 }
 
@@ -60,9 +60,3 @@ export class Workflow1 extends Workflow<{ age: number }, string> {
             .endWith(PrintAge);
     }
 }
-
-// Create new instance of the workflow
-let workflow: Workflow<{ age: number }, string> = new Workflow1({ age: 100 });
-
-// Run the workflow
-workflow.run().then(age => console.log(age));

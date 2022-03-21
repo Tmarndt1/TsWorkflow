@@ -2,10 +2,11 @@
     "compilerOptions": {
       "target": "es6",
       "module": "commonjs",
+      "outDir": "./dist",
       "declaration": true,
-      "outDir": "./lib",
       "strict": true,
-      "experimentalDecorators": true
+      "experimentalDecorators": true,
+      "sourceMap": true
     },
     "files": [
         "examples/workflow1.ts",
