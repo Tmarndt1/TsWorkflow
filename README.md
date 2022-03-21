@@ -27,5 +27,5 @@ npm install ts-workflow
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md]("https://github.com/Tmarndt1/TsWorkflow/blob/main/LICENSE") file for details
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details
 
