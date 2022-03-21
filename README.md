@@ -1,66 +1,31 @@
-# TsWorkflow
-A simple workflow library written in typescript 
+# Ts Workflow 
+
+<!-- [![Build Status](https://travis-ci.org/danielgerlag/workflow-es.svg?branch=master)](https://travis-ci.org/danielgerlag/workflow-es) -->
+
+Ts Workflow is a workflow library that provides a simple methodology to build sagas through the 
+fluent syntax with compile time validation between steps.
+
+<!-- ## Installing
+
+Install the core npm package "ts-workflow"
 
 ```
-/**
- * Workflow step that increments the Workflow context's age property by 1
- */
-class Birthday extends WorkflowStep<void, number, { age: number }> {
-    public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
-        return Promise.resolve(++context.data.age);
-    }
-}
-
-/**
- * Workflow step that sends fake birthday email
- */
-class Highschool extends WorkflowStep<void, number, { age: number }> {
-    public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
-        console.log("Contgratulations on graduating Highschool!");
-        return Promise.resolve(context.data.age);
-    }
-}
-
-/**
- * Workflow step that sends fake birthday email
- */
-class Retirement extends WorkflowStep<void, number, { age: number }> {
-    public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
-        console.log("Contgratulations on retiring!");
-        return Promise.resolve(context.data.age);
-    }
-}
-
-/**
- * Workflow step that alerts the Workflow's context age property
- */
-class PrintAge extends WorkflowStep<number, string, { age: number }> {
-    public run(age: number, context: IWorkflowContext<{ age: number; }>): Promise<string> {
-        return Promise.resolve(`Age: ${age}`);
-    }
-}
-
-/**
- * Simple age workflow example that increments an age and prints age in final step
- */
-class AgeWorkflow extends Workflow<{ age: number }, string> {
-    public id: string = "age-workflow"
-    public version: string = "1";
-
-    public build(builder: IWorkflowBuilder<{ age: number; }, string>) {
-        return builder.startWith(Birthday)
-            .if (x => x == 18)
-                .do(Highschool)
-            .if(x => x == 60)
-                .do(Retirement)
-            .delay(100)
-            .endWith(PrintAge);
-    }
-}
-
-// Create new instance of the workflow
-let workflow: Workflow<{ age: number }, string> = new AgeWorkflow({ age: 17 });
-
-// Run the workflow
-workflow.run().then(age => console.log(age));
+npm install ts-workflow
 ```
+ -->
+
+<!-- ### Guides
+
+* [Javascript (ES6)](es2017-guide.md)
+* [Typescript](typescript-guide.md)
+ -->
+
+## Authors
+
+* **Travis Arndt**
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
