@@ -19,8 +19,7 @@ export class WorkflowStepBuilderFinal<TInput, TResult, TContext> extends Workflo
     private _step: WorkflowStep<TInput, TResult, TContext>;
     private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
 
-    public constructor(step: WorkflowStep<TInput, TResult, TContext>, last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext> | null) 
-    {
+    public constructor(step: WorkflowStep<TInput, TResult, TContext>, last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext> | null) {
         super(context);
         this._step = step;
         this._last = last;
