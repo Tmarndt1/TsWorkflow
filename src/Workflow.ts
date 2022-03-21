@@ -7,7 +7,7 @@ export abstract class Workflow<TContext = void, TResult = void> {
     public abstract id: string;
     public abstract version: string;
     private _context: WorkflowContext<TContext>;
-    private _builder: WorkflowBuilder<TContext, TResult> = null;
+    private _builder: WorkflowBuilder<TContext, TResult> | null = null;
 
     public constructor(context: TContext) {
         this._context =  new WorkflowContext(context);
@@ -25,6 +25,6 @@ export abstract class Workflow<TContext = void, TResult = void> {
 
         this._context.setCts(cts);
 
-        return this._builder.run(cts);
+        return this._builder?.run(cts) ?? Promise.reject("Internal error in Workflow");
     }
 }

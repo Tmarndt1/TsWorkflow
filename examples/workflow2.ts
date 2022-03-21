@@ -6,11 +6,11 @@ import { WorkflowStep } from "../src/WorkflowStep";
 
 class Step1 extends WorkflowStep {
     public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
         
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (context.cancellationTokenSource.token.isCancelled()) {
+                if (context?.cancellationTokenSource?.token.isCancelled()) {
                     reject();
                 } else {
                     console.log("Step 1 ran...");
@@ -24,11 +24,11 @@ class Step1 extends WorkflowStep {
 
 class Step2 extends WorkflowStep {
     public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (context.cancellationTokenSource.token.isCancelled()) {
+                if (context?.cancellationTokenSource?.token.isCancelled()) {
                     reject();
                 } else {
                     console.log("Step 2 ran...");
@@ -42,11 +42,11 @@ class Step2 extends WorkflowStep {
 
 class Step3 extends WorkflowStep {
     public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (context.cancellationTokenSource.token.isCancelled()) {
+                if (context?.cancellationTokenSource?.token.isCancelled()) {
                     reject();
                 } else {
                     console.log("Step 3 ran...");
@@ -60,11 +60,11 @@ class Step3 extends WorkflowStep {
 
 class Step4 extends WorkflowStep {
     public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (context.cancellationTokenSource.token.isCancelled()) {
+                if (context?.cancellationTokenSource?.token.isCancelled()) {
                     reject();
                 } else {
                     console.log("Step 4 ran...");
@@ -78,11 +78,11 @@ class Step4 extends WorkflowStep {
 
 class TimeoutStep extends WorkflowStep {
     public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (context.cancellationTokenSource.token.isCancelled()) {
+                if (context?.cancellationTokenSource?.token.isCancelled()) {
                     reject();
                 } else {
                     console.log("Timeout step ran...");

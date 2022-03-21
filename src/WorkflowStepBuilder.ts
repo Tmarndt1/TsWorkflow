@@ -18,15 +18,15 @@ export interface IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> extend
     if(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TOutput, TResult, TContext>;
     delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
     timeout(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
-    failed(step: { new(): WorkflowStep<any, any, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
+    error(step: { new(): WorkflowStep<any, any, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
 }
 
 export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
     private _step: WorkflowStep<TInput, TOutput, TContext>;
-    private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
-    private _next: WorkflowStepBuilderBase<TOutput, any, TResult, TContext>;
+    private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext> | null = null;
+    private _next: WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null = null;
 
-    public constructor(step: WorkflowStep<TInput, TOutput, TContext>,  last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext>) {
+    public constructor(step: WorkflowStep<TInput, TOutput, TContext>, last: WorkflowStepBuilderBase<any, any, TResult, TContext> | null, context: WorkflowContext<TContext> | null) {
         super(context);
         this._step = step;
         this._last = last;
@@ -45,7 +45,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
         return parallel as any;
     }
 
-    public failed(step: new () => WorkflowStep<any, any, TContext>): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
+    public error(step: new () => WorkflowStep<any, any, TContext>): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
         if (step == null) throw new Error("Step cannot be null");
         
         let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);
@@ -103,7 +103,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
         return this._next != null;
     }
 
-    public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> {
+    public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null{
         return this._next;
     }
 
@@ -119,9 +119,9 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
             if (cts?.token.isCancelled()) return reject("Workflow has been cancelled");
 
             try {
-                let timeout: number = null;
-                let delay: number = null;
-                let hasTimeout: boolean = this._timeout > 0;
+                let timeout: NodeJS.Timeout | null = null;
+                let delay: NodeJS.Timeout | null = null;
+                let hasTimeout: boolean = this._timeout != null;
                 let hasExpired: boolean = false;
 
                 if (hasTimeout) {
@@ -130,10 +130,10 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
 
                         cts.cancel();
 
-                        clearTimeout(delay);
+                        if (delay != null) clearTimeout(delay);
 
                         reject(timeoutMessage);
-                    }, this._timeout);
+                    }, this._timeout ?? 0);
                 }
     
                 delay = setTimeout(async () => {
@@ -145,12 +145,12 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
                         if (hasExpired) {
                             return reject(timeoutMessage);
                         } else {
-                            clearTimeout(timeout);
+                            if (timeout != null) clearTimeout(timeout);
                         }
                     } catch (error) {
                         if (this._errorStep != null) {
                             try {
-                                clearTimeout(timeout);
+                                if (timeout != null) clearTimeout(timeout);
 
                                 return resolve(await this._errorStep.run(input, cts));
                             } catch (error) {
@@ -161,7 +161,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult, TContext> extends Wor
 
                     if (this.hasNext()) {
                         try {
-                            output = await this.getNext().run(output, cts);
+                            output = await this.getNext()?.run(output, cts);
                         } catch (error) {
                             reject(error);
                         }

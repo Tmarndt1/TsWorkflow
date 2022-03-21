@@ -15,13 +15,11 @@ export interface IWorkflowStepBuilderFinal<TInput, TResult, TContext> {
 
 export class WorkflowStepBuilderFinal<TInput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TResult, TResult, TContext> implements IWorkflowStepBuilderFinal<TInput, TResult, TContext> {    
     private _expiration: number | null = null;
-    private _onTimeoutStep: WorkflowStepBuilder<TInput, TResult, TResult, TContext>;
+    private _onTimeoutStep: WorkflowStepBuilder<TInput, TResult, TResult, TContext> | null = null;
     private _step: WorkflowStep<TInput, TResult, TContext>;
     private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
 
-    public constructor(step: WorkflowStep<TInput, TResult, TContext>, 
-        last: WorkflowStepBuilderBase<any, any, TResult, TContext>, 
-        context: WorkflowContext<TContext>) 
+    public constructor(step: WorkflowStep<TInput, TResult, TContext>, last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext> | null) 
     {
         super(context);
         this._step = step;
@@ -59,7 +57,7 @@ export class WorkflowStepBuilderFinal<TInput, TResult, TContext> extends Workflo
         return false;
     }
 
-    public getNext(): WorkflowStepBuilderBase<TResult, any, TResult, TContext> {
+    public getNext(): WorkflowStepBuilderBase<TResult, any, TResult, TContext> | null {
         return null;
     }
 

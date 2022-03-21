@@ -23,7 +23,7 @@ export class CancellationToken {
 }
 
 export default class CancellationTokenSource {
-    public token: CancellationToken = null;
+    public token: CancellationToken;
 
     constructor() {
         this.token = new CancellationToken();

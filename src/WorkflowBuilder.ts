@@ -10,8 +10,8 @@ export interface IWorkflowBuilder<TContext, TResult> {
 }
 
 export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TContext, TResult> {
-    private _context: WorkflowContext<TContext> = null;
-    private _firstStep: WorkflowStepBuilderBase<any, any, TResult, TContext> = null;
+    private _context: WorkflowContext<TContext> | null = null;
+    private _firstStep: WorkflowStepBuilderBase<any, any, TResult, TContext> | null = null;
 
     public constructor(context: WorkflowContext<TContext>) {
         this._context = context;
@@ -29,13 +29,17 @@ export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TCon
         return new Promise(async (resolve, reject) => {
             let step = this._firstStep;
 
-            while (step.hasNext()) {
+            while (step?.hasNext()) {
                 step = step.getNext();
             }
+
+            let expiration: number | null = 0;
     
-            let expiration: number = step instanceof WorkflowStepBuilderFinal && step.getExpiration();
+            if (step instanceof WorkflowStepBuilderFinal) {
+                expiration = step.getExpiration();
+            }
     
-            if (expiration > 0) {
+            if (expiration != null && expiration > 0) {
                 setTimeout(() => {
                     cts.cancel();
 
@@ -44,7 +48,7 @@ export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TCon
             }
 
             try {
-                resolve(await this._firstStep.run(null, cts));
+                resolve(await this._firstStep?.run(null, cts));
             } catch (error) {
                 reject(error);
             }

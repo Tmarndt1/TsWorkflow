@@ -14,9 +14,9 @@ enum ConditionType {
 interface ICondition {
     delay: number | null;
     timeout: number | null;
-    type: ConditionType,
-    step: WorkflowStep<unknown, unknown, unknown>;
-    condition: (args: any) => boolean | null;
+    type: ConditionType;
+    step: WorkflowStep<unknown, unknown, unknown> | null;
+    condition: ((args: any) => boolean) | null;
 }
 
 /**
@@ -102,13 +102,13 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
 
     private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
 
-    private _next: WorkflowStepBuilderAggregate<any, any, TResult, TContext>;
+    private _next: WorkflowStepBuilderAggregate<any, any, TResult, TContext> | null = null;
 
     get _current(): ICondition {
         return this._maps[this._maps.length - 1];
     }
 
-    public constructor(last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext>, condition: (input: TInput) => boolean) {
+    public constructor(last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext> | null, condition: (input: TInput) => boolean) {
         super(context);
         this._last = last;
         this._context = context;
@@ -177,7 +177,7 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         return this._next != null;
     }
 
-    public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> {
+    public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null{
         return this._next;
     }
 
@@ -188,13 +188,13 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
     public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < this._maps.length; i++) {
-                if (this._maps[i].type === ConditionType.Else || this._maps[i].condition != null && this._maps[i].condition(input)) {
+                if (this._maps[i].type === ConditionType.Else || this._maps[i].condition?.(input)) {
                     try {
                         let timeoutMessage: string = `Step timed out after ${this._maps[i].timeout} ms`;
 
-                        let timeout: number = null;
-                        let delay: number = null;
-                        let hasTimeout: boolean = this._maps[i].timeout > 0;
+                        let timeout: NodeJS.Timeout | null = null;
+                        let delay: number | null = null;
+                        let hasTimeout: boolean = this._maps[i]?.timeout != null;
                         let hasExpired: boolean = false;
     
                         if (hasTimeout) {
@@ -203,30 +203,30 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
     
                                 cts.cancel();
     
-                                clearTimeout(delay);
+                                if (delay != null) clearTimeout(delay);
     
                                 reject(timeoutMessage);
-                            }, this._maps[i].timeout);
+                            }, this._maps[i].timeout ?? 0);
                         }
 
                         if (this._maps[i].delay != null) {
                             return new Promise((resolve, reject) => {
                                 setTimeout(async () => {
-                                    let result: TOutput = await this._maps[i].step.run(input, this._context) as TOutput;
+                                    let result: TOutput = await this._maps[i].step?.run(input, this._context) as TOutput;
 
                                     if (hasExpired) return reject(timeoutMessage);
 
-                                    clearTimeout(timeout);
+                                    if (delay != null) clearTimeout(delay);
                                     
-                                    let nextResult = await this.getNext().run(result, cts);
+                                    let nextResult = await this.getNext()?.run(result, cts);
     
                                     resolve(nextResult);       
-                                }, this._maps[i].delay);
+                                }, this._maps[i].delay ?? 0);
                             });
                         } else {
-                            let result: TOutput = await this._maps[i].step.run(input, this._context) as TOutput;
+                            let result: TOutput = await this._maps[i].step?.run(input, this._context) as TOutput;
     
-                            return this.getNext().run(result, cts);
+                            return this.getNext()?.run(result, cts);
                         }
                         
                     } catch (error) {

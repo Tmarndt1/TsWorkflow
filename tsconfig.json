@@ -4,8 +4,8 @@
       "module": "commonjs",
       "declaration": true,
       "outDir": "./lib",
-      "strict": false,
-
+      "strict": true,
+      "experimentalDecorators": true
     },
     "files": [
         "examples/workflow1.ts",

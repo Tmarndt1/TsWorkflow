@@ -10,9 +10,9 @@ import { IWorkflowStepBuilderParallel, WorkflowStepBuilderParallel } from "./Wor
 
 export class WorkflowStepBuilderAggregate<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilderBasic<TInput, TOutput, TResult, TContext> {
     private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
-    private _next: WorkflowStepBuilderBase<TOutput, any, TResult, TContext>;
+    private _next: WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null = null;
 
-    public constructor(last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext>) {
+    public constructor(last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext> | null) {
         super(context);
         this._last = last;
         this._context = context;
@@ -64,7 +64,7 @@ export class WorkflowStepBuilderAggregate<TInput, TOutput, TResult, TContext> ex
         return this._next != null;
     }
 
-    public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> {
+    public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null {
         return this._next;
     }
 
@@ -73,6 +73,6 @@ export class WorkflowStepBuilderAggregate<TInput, TOutput, TResult, TContext> ex
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
-        return this._next.run(input as any, cts);
+        return this._next?.run(input as any, cts) ?? Promise.reject("Internal error in workflow");
     }
 }

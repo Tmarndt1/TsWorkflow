@@ -6,28 +6,28 @@ import { WorkflowStep } from "../src/WorkflowStep";
 
 class Step1 extends WorkflowStep<void, number> {
     public run(input: void, context: IWorkflowContext<void>): Promise<number> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
         return Promise.resolve(1);
     }
 }
 
 class Step2 extends WorkflowStep<number, number, void> {
     public run(input: number, context: IWorkflowContext<void>): Promise<number> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
         return Promise.resolve(input++);
     }
 }
 
 class Step3 extends WorkflowStep<number, string> {
     public run(input: number, context: IWorkflowContext<void>): Promise<string> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
         return Promise.resolve("Step 3 result..");
     }
 }
 
 class Step4 extends WorkflowStep<[number, string], [number, string]> {
     public run(input: [number, string], context: IWorkflowContext<void>): Promise<[number, string]> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
         return Promise.resolve(input);
     }
 }

@@ -6,7 +6,7 @@ import { WorkflowStep } from "../src/WorkflowStep";
 
 class Step1 extends WorkflowStep {
     public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
         
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -18,11 +18,11 @@ class Step1 extends WorkflowStep {
 
 class Step2 extends WorkflowStep {
     public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context.cancellationTokenSource.token.isCancelled()) return Promise.reject();
+        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (context.cancellationTokenSource.token.isCancelled()) {
+                if (context?.cancellationTokenSource?.token.isCancelled()) {
                     reject();
                 } else {
                     resolve(console.log("Step 2 ran..."));
@@ -51,7 +51,7 @@ class Workflow2 extends Workflow {
         return builder
             .startWith(Step1)
                 .timeout(1500)
-                .failed(Report)
+                .error(Report)
             .endWith(Step2)
                 .expire(5000);
     }

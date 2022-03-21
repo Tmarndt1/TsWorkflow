@@ -5,39 +5,35 @@ import { WorkflowStep } from "../src/WorkflowStep";
 
 class Birthday extends WorkflowStep<void, number, { age: number }> {
     public run(input: void, context: IWorkflowContext<{ age: number }>): Promise<number> {
-        return Promise.resolve(++context.data.age);
+        return Promise.resolve(context?.data?.age ? context.data.age++ : 0);
     }
 }
 
 class Highschool extends WorkflowStep<number, string, { age: number }> {
     public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
-        console.log("Contgratulations on graduating Highschool!");
-        return Promise.resolve(context.data.age.toString());
+        return Promise.resolve("Contgratulations on graduating Highschool!");
     }
 }
 
 class College extends WorkflowStep<number, string, { age: number }> {
     public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
-        console.log("Contgratulations on graduating College!");
-        return Promise.resolve(context.data.age.toString());
+        return Promise.resolve("Contgratulations on graduating College!");
     }
 }
 
-class Retirement extends WorkflowStep<number, number, { age: number }> {
-    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<number> {
-        console.log("Contgratulations on retiring!");
-        return Promise.resolve(context.data.age);
+class Retirement extends WorkflowStep<number, string, { age: number }> {
+    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
+        return Promise.resolve("Contgratulations on retiring!");
     }
 }
 
-class UnknownAge extends WorkflowStep<number, number, { age: number }> {
-    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<number> {
-        console.log("Who knows...");
-        return Promise.resolve(context.data.age);
+class UnknownAge extends WorkflowStep<number, string, { age: number }> {
+    public run(input: number, context: IWorkflowContext<{ age: number }>): Promise<string> {
+        return Promise.resolve("Who knows...");
     }
 }
 
-class PrintAge extends WorkflowStep<number, string, { age: number }> {
+class PrintAge extends WorkflowStep<number | string, string, { age: number }> {
     public run(age: number, context: IWorkflowContext<{ age: number; }>): Promise<string> {
         return Promise.resolve(`Age: ${age}`);
     }
@@ -46,7 +42,7 @@ class PrintAge extends WorkflowStep<number, string, { age: number }> {
 /**
  * Simple age workflow example that increments an age and prints age in final step
  */
-class Workflow1 extends Workflow<{ age: number }, string> {
+export class Workflow1 extends Workflow<{ age: number }, string> {
     public id: string = "workflow-1"
     public version: string = "1";
 
@@ -60,8 +56,6 @@ class Workflow1 extends Workflow<{ age: number }, string> {
                 .do(Retirement)
             .else()
                 .do(UnknownAge)
-                    .delay(3000)
-                    .timeout(1000)
             .aggregate()
             .endWith(PrintAge);
     }

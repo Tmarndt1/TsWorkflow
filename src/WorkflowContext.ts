@@ -1,13 +1,14 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 
 export interface IWorkflowContext<TContext> {
-    data: TContext
-    cancellationTokenSource: CancellationTokenSource;
+    data: TContext | null;
+    cancellationTokenSource: CancellationTokenSource | null;
 }
 
 export class WorkflowContext<TContext> implements IWorkflowContext<TContext> {
-    public data: TContext;
-    public cancellationTokenSource: CancellationTokenSource;
+    public data: TContext | null;
+
+    public cancellationTokenSource: CancellationTokenSource | null = null;
 
     public constructor(data: TContext) {
         this.data = data;
