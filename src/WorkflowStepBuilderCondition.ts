@@ -17,6 +17,7 @@ interface ICondition {
     type: ConditionType;
     step: WorkflowStep<unknown, unknown, unknown> | null;
     condition: ((args: any) => boolean) | null;
+    reject: boolean;
 }
 
 /**
@@ -26,7 +27,7 @@ export interface IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult
     /**
      * Aggregates the conditional results
      */
-    aggregate(): IWorkflowStepBuilderBasic<void, TOutput, TResult, TContext>;
+    endIf(): IWorkflowStepBuilderBasic<void, TOutput, TResult, TContext>;
 }
 
 /**
@@ -74,8 +75,23 @@ export interface IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TCont
      */
     elseIf(expression: (input: TInput) => boolean): IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext>;
     /**
-     * 
-     * @param expression 
+     * Conditional method that will run if all other if conditionals don't evaluate
+     */
+    else(): IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext>;
+}
+
+export interface IWorkflowStepBuilderConditionRejected<TInput, TOutput, TResult, TContext> {
+    /**
+     * Aggregates the conditional results
+     */
+    endIf(): IWorkflowStepBuilderBasic<void, TOutput, TResult, TContext>;
+    /**
+     * Conditional method that will run a step if the expression equates to true
+     * @param expression The expression to evaluate
+     */
+    elseIf(expression: (input: TInput) => boolean): IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext>;
+    /**
+     * Conditional method that will run if all other if conditionals don't evaluate
      */
     else(): IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext>;
 }
@@ -84,6 +100,10 @@ export interface IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TCont
  * Interface that defines the basic methods on a conditional workflow
  */
 export interface IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> {
+    /**
+     * If condition is true it will reject and end the workflow
+     */
+    reject(): IWorkflowStepBuilderConditionRejected<TInput, TOutput, TResult, TContext>;
     /**
      * Defines the step to run if the condition is true
      * @param {new () => WorkflowStep<TInput, TNext, TContext>} step the step to run if the condition is true
@@ -96,7 +116,8 @@ export interface IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContex
  */
 export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> 
     implements IWorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext>, IWorkflowStepBuilderConditionIf<TInput, TOutput, TResult, TContext>,
-        IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext>, IWorkflowStepBuilderConditionElseDo<TInput, TOutput, TResult, TContext> {
+        IWorkflowStepBuilderConditionElse<TInput, TOutput, TResult, TContext>, IWorkflowStepBuilderConditionElseDo<TInput, TOutput, TResult, TContext>,
+        IWorkflowStepBuilderConditionRejected<TInput, TOutput, TResult, TContext> {
             
     private _maps: ICondition[] = [];
 
@@ -112,13 +133,21 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         super(context);
         this._last = last;
         this._context = context;
+
         this._maps.push({
             delay: null,
             timeout: null,
             type: ConditionType.If,
             condition: condition,
-            step: null
+            step: null,
+            reject: false
         });
+    }
+
+    public reject(): IWorkflowStepBuilderConditionRejected<TInput, TOutput, TResult, TContext> {
+        this._current.reject = true;
+
+        return this;
     }
     
     public timeout(milliseconds: number): any {
@@ -141,7 +170,7 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
         return this;
     }
 
-    public aggregate(): IWorkflowStepBuilderBasic<void, TOutput, TResult, TContext> {
+    public endIf(): IWorkflowStepBuilderBasic<void, TOutput, TResult, TContext> {
         this._next = new WorkflowStepBuilderAggregate(this, this._context);
 
         return this._next;
@@ -155,7 +184,8 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
             timeout: null,
             type: ConditionType.ElseIf,
             condition: expression,
-            step: null
+            step: null,
+            reject: false
         });
 
         return this;
@@ -167,7 +197,8 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
             timeout: null,
             type: ConditionType.Else,
             condition: null,
-            step: null
+            step: null,
+            reject: false
         });
 
         return this;
@@ -190,6 +221,8 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult, TContext> ex
             for (let i = 0; i < this._maps.length; i++) {
                 if (this._maps[i].type === ConditionType.Else || this._maps[i].condition?.(input)) {
                     try {
+                        if (this._maps[i].reject) reject("Workflow manually rejected");
+
                         let timeoutMessage: string = `Step timed out after ${this._maps[i].timeout} ms`;
 
                         let timeout: NodeJS.Timeout | null = null;

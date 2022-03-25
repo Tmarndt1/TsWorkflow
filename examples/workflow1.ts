@@ -56,7 +56,7 @@ export class Workflow1 extends Workflow<{ age: number }, string> {
                 .do(Retirement)
             .else()
                 .do(UnknownAge)
-            .aggregate()
+            .endIf()
             .endWith(PrintAge);
     }
 }
