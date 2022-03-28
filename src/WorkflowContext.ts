@@ -10,11 +10,8 @@ export class WorkflowContext<TContext> implements IWorkflowContext<TContext> {
 
     public cancellationTokenSource: CancellationTokenSource | null = null;
 
-    public constructor(data: TContext) {
+    public constructor(data: TContext, cts: CancellationTokenSource) {
         this.data = data;
-    }
-
-    public setCts(cts: CancellationTokenSource) {
         this.cancellationTokenSource = cts;
     }
 }

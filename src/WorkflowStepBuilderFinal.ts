@@ -10,12 +10,11 @@ export interface IWorkflowStepBuilderFinal<TInput, TResult, TContext> {
      * @param {number} milliseconds The number of milliseconds until the workflow expires.
      */
     expire(milliseconds: number): IWorkflowStepBuilderFinal<TInput, TResult, TContext>;
-    failed(step: { new(): WorkflowStep<any, any, TContext> }): IWorkflowStepBuilderFinal<TInput, void, TContext>;
+    onFailure(): IWorkflowStepBuilderFinal<TInput, void, TContext>;
 }
 
 export class WorkflowStepBuilderFinal<TInput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TResult, TResult, TContext> implements IWorkflowStepBuilderFinal<TInput, TResult, TContext> {    
     private _expiration: number | null = null;
-    private _onTimeoutStep: WorkflowStepBuilder<TInput, TResult, TResult, TContext> | null = null;
     private _step: WorkflowStep<TInput, TResult, TContext>;
     private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
 
@@ -26,13 +25,7 @@ export class WorkflowStepBuilderFinal<TInput, TResult, TContext> extends Workflo
         this._context = context;
     }
 
-    public failed(step: new () => WorkflowStep<any, any, TContext>): IWorkflowStepBuilderFinal<TInput, void, TContext> {
-        if (step == null) throw new Error("Step cannot be null");
-        
-        let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);
-
-        this._errorStep = stepBuiler;
-
+    public onFailure(): IWorkflowStepBuilderFinal<TInput, void, TContext> {
         return this;
     }
     
@@ -68,14 +61,6 @@ export class WorkflowStepBuilderFinal<TInput, TResult, TContext> extends Workflo
                 try {
                     resolve(await this._step.run(input, this._context));
                 } catch (error) {
-                    if (this._errorStep != null) {
-                        try {
-                            await this._errorStep.run(input, cts);
-                        } catch (error) {
-                            return reject(error);
-                        }
-                    }
-
                     return reject(error);
                 }
                 

@@ -9,13 +9,12 @@ import { IWorkflowStepBuilderFinal, WorkflowStepBuilderFinal } from "./WorkflowS
 type ReturnType<T> = T extends { new(): WorkflowStep<unknown, infer TOutput, unknown> }
     ? TOutput : null;
 
-export interface IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext>{
+export interface IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> {
     if<TNext>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext>;
     then<TNext>(step: { new(): WorkflowStep<TOutput, TNext, TContext> }): IWorkflowStepBuilder<TOutput, TNext, TResult, TContext>;
     endWith(step: { new(): WorkflowStep<TOutput, TResult, TContext> }): IWorkflowStepBuilderFinal<TOutput, TResult, TContext>;
-    delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
-    timeout(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
-    error(step: { new(): WorkflowStep<any, any, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
+    delay(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext>;
+    timeout(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext>;
     parallel<T extends { new(): WorkflowStep<any, any, TContext> }[] | []>(steps: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult, TContext>;
 }
 
@@ -42,18 +41,8 @@ export class WorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> ext
 
         return parallel as any;
     }
-
-    public error(step: new () => WorkflowStep<any, any, TContext>): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
-        if (step == null) throw new Error("Step cannot be null");
-        
-        let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);
-
-        this._errorStep = stepBuiler;
-
-        return this;
-    }
     
-    public timeout(milliseconds: number ): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
+    public timeout(milliseconds: number ): IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> {
         if (milliseconds < 1) throw Error("Timeout must be a postive integer");
         
         this._timeout = milliseconds;
@@ -71,7 +60,7 @@ export class WorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> ext
         return stepBuiler;
     }
 
-    public delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
+    public delay(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> {
         this._delayTime = milliseconds;
         
         return this;
@@ -141,14 +130,6 @@ export class WorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> ext
                         try {
                             output = await Promise.all(this._steps.map(x => x.run(input, this._context)));
                         } catch (error) {
-                            if (this._errorStep != null) {
-                                try {
-                                    await this._errorStep.run(input, cts);
-                                } catch (error) {
-                                    return reject(error);
-                                }
-                            }
-
                             return reject(error);
                         }
 

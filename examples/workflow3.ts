@@ -1,6 +1,7 @@
 import { Workflow } from "../src/Workflow";
 import { IWorkflowBuilder } from "../src/WorkflowBuilder";
 import { IWorkflowContext } from "../src/WorkflowContext";
+import { WorkflowFault } from "../src/WorkflowFault";
 import { WorkflowStep } from "../src/WorkflowStep";
 
 class Step1 extends WorkflowStep {
@@ -31,11 +32,11 @@ class Step2 extends WorkflowStep {
     }
 }
 
-class Report extends WorkflowStep {
-    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        return new Promise((resolve, reject) => {
+class FaultStep extends WorkflowStep<WorkflowFault, string> {
+    public run(input: WorkflowFault, context: IWorkflowContext<void>): Promise<string> {
+        return new Promise((resolve) => {
             setTimeout(() => {
-                resolve(); 
+                resolve("Fault step ran"); 
             }, 1000);
         });
     }
@@ -49,7 +50,6 @@ export class Workflow3 extends Workflow {
     public build(builder: IWorkflowBuilder<void, void>) {
         return builder
             .startWith(Step1)
-                .error(Report)
             .endWith(Step2)
                 .expire(500);
     }
