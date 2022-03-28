@@ -7,15 +7,15 @@ import { WorkflowStepBuilderFinal } from "./WorkflowStepBuilderFinal";
 
 export interface IWorkflowBuilder<TContext, TResult> {
     /**
-     * Starts the workflow with the WorkflowStep dependency
-     * @param {WorkflowStep} step The required WorfklowStep to start with
-     * @returns {WorkflowStepBuilder<TInput, TOutput, TResult, TContext>} A new WorkflowStepBuilder instance to chain additional steps or conditions
+     * Starts the workflow with the WorkflowStep dependency.
+     * @param {WorkflowStep} step The required WorfklowStep to start with.
+     * @returns {WorkflowStepBuilder<TInput, TOutput, TResult, TContext>} A new WorkflowStepBuilder instance to chain additional steps or conditions.
      */
     startWith<TInput, TOutput>(step: { new(): WorkflowStep<TInput, TOutput, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
 }
 
 /**
- * WorkflowBuilder class that allows for the chaining of various workflow steps and conditions
+ * WorkflowBuilder class that allows for the chaining of various workflow steps and conditions. 
  */
 export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TContext, TResult> {
     private _context: WorkflowContext<TContext> | null = null;
@@ -26,9 +26,9 @@ export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TCon
     }
     
     /**
-     * Starts the workflow with the WorkflowStep dependency
-     * @param {WorkflowStep} step The required WorfklowStep to start with
-     * @returns {WorkflowStepBuilder<TInput, TOutput, TResult, TContext>} A new WorkflowStepBuilder instance to chain additional steps or conditions
+     * Starts the workflow with the WorkflowStep dependency.
+     * @param {WorkflowStep} step The required WorfklowStep to start with.
+     * @returns {WorkflowStepBuilder<TInput, TOutput, TResult, TContext>} A new WorkflowStepBuilder instance to chain additional steps or conditions.
      */
     public startWith<TInput, TOutput>(step: { new(): WorkflowStep<TInput, TOutput, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
         let stepBuiler = new WorkflowStepBuilder(new step(), null, this._context);
@@ -39,9 +39,9 @@ export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TCon
     }
 
     /**
-     * Runs the WorkflowStep
-     * @param {CancellationTokenSource} cts The CancellationTokenSource to cancel the workflow 
-     * @returns {Promise<TResult>} A Promise of type TResult 
+     * Runs the first WorkflowStep and passes the output into the next WorkflowStep.
+     * @param {CancellationTokenSource} cts The CancellationTokenSource to cancel the workflow.
+     * @returns {Promise<TResult>} A Promise of type TResult.
      */
     public run(cts: CancellationTokenSource): Promise<TResult> {
         return new Promise(async (resolve, reject) => {

@@ -9,7 +9,6 @@ export abstract class WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext
     protected _errorHandler: ErrorHandler | null = null;
     protected _timeout: number | null = null;
     protected _cancellationTokenSource: CancellationTokenSource | null = null;
-    protected _errorStep: WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> | null = null;
 
     public constructor(context: WorkflowContext<TContext> | null) 
     {
