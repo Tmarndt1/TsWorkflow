@@ -1,7 +1,5 @@
 # Ts Workflow 
 
-<!-- [![Build Status](https://travis-ci.org/danielgerlag/workflow-es.svg?branch=master)](https://travis-ci.org/danielgerlag/workflow-es) -->
-
 The TsWorkflow library allows a developer to create simple or complex workflows with compile time validation between steps. The compile time validation reduces runtime exeptions from being thrown and provides a better experience for an end user. TsWorkflow leverages the fluent syntax to promote human readable code which helps developers quickly understand the different steps in a workflow.
 
 <!-- ## Installing
