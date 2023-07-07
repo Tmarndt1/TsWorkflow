@@ -11,4 +11,10 @@ module.exports = {
       "json",
       "node"
     ],
+    coverageDirectory: "coverage",
+    coverageReporters: [
+      "json-summary", 
+      "text",
+      "lcov"
+    ]
 };
