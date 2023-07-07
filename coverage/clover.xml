@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1688689005459" clover="3.2.0">
+  <project timestamp="1688689005459" name="All files">
+    <metrics statements="408" coveredstatements="274" conditionals="306" coveredconditionals="160" methods="148" coveredmethods="99" elements="862" coveredelements="533" complexity="0" loc="408" ncloc="408" packages="2" files="17" classes="17"/>
+    <package name="examples">
+      <metrics statements="93" coveredstatements="76" conditionals="148" coveredconditionals="88" methods="51" coveredmethods="43"/>
+      <file name="workflow1.ts" path="C:\Users\tmarn\Projects\TsWorkflow\examples\workflow1.ts">
+        <metrics statements="15" coveredstatements="15" conditionals="10" coveredconditionals="7" methods="11" coveredmethods="11"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="8" count="3" type="cond" truecount="7" falsecount="3"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="32" count="3" type="stmt"/>
+        <line num="38" count="5" type="stmt"/>
+        <line num="45" count="1" type="stmt"/>
+        <line num="46" count="3" type="stmt"/>
+        <line num="47" count="3" type="stmt"/>
+        <line num="50" count="3" type="stmt"/>
+        <line num="51" count="3" type="stmt"/>
+        <line num="53" count="3" type="stmt"/>
+        <line num="55" count="3" type="stmt"/>
+      </file>
+      <file name="workflow2.ts" path="C:\Users\tmarn\Projects\TsWorkflow\examples\workflow2.ts">
+        <metrics statements="30" coveredstatements="26" conditionals="76" coveredconditionals="52" methods="14" coveredmethods="14"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="8" count="1" type="cond" truecount="6" falsecount="3"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="cond" truecount="7" falsecount="3"/>
+        <line num="13" count="0" type="stmt"/>
+        <line num="15" count="1" type="stmt"/>
+        <line num="24" count="1" type="cond" truecount="6" falsecount="3"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
+        <line num="28" count="1" type="cond" truecount="7" falsecount="3"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="40" count="1" type="cond" truecount="6" falsecount="3"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="43" count="1" type="stmt"/>
+        <line num="44" count="1" type="cond" truecount="7" falsecount="3"/>
+        <line num="45" count="0" type="stmt"/>
+        <line num="47" count="1" type="stmt"/>
+        <line num="56" count="1" type="cond" truecount="6" falsecount="3"/>
+        <line num="58" count="1" type="stmt"/>
+        <line num="59" count="1" type="stmt"/>
+        <line num="60" count="1" type="cond" truecount="7" falsecount="3"/>
+        <line num="61" count="0" type="stmt"/>
+        <line num="63" count="1" type="stmt"/>
+        <line num="70" count="1" type="stmt"/>
+        <line num="71" count="1" type="stmt"/>
+        <line num="72" count="1" type="stmt"/>
+        <line num="75" count="1" type="stmt"/>
+      </file>
+      <file name="workflow3.ts" path="C:\Users\tmarn\Projects\TsWorkflow\examples\workflow3.ts">
+        <metrics statements="19" coveredstatements="9" conditionals="28" coveredconditionals="6" methods="11" coveredmethods="4"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="9" count="1" type="cond" truecount="6" falsecount="3"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
+        <line num="21" count="0" type="cond" truecount="0" falsecount="9"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="25" count="0" type="cond" truecount="0" falsecount="10"/>
+        <line num="26" count="0" type="stmt"/>
+        <line num="28" count="0" type="stmt"/>
+        <line num="37" count="0" type="stmt"/>
+        <line num="38" count="0" type="stmt"/>
+        <line num="39" count="0" type="stmt"/>
+        <line num="46" count="1" type="stmt"/>
+        <line num="47" count="1" type="stmt"/>
+        <line num="48" count="1" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+      </file>
+      <file name="workflow5.ts" path="C:\Users\tmarn\Projects\TsWorkflow\examples\workflow5.ts">
+        <metrics statements="9" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="4"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
+      </file>
+      <file name="workflow6.ts" path="C:\Users\tmarn\Projects\TsWorkflow\examples\workflow6.ts">
+        <metrics statements="20" coveredstatements="18" conditionals="34" coveredconditionals="23" methods="10" coveredmethods="10"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="9" count="1" type="cond" truecount="6" falsecount="3"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="22" count="1" type="cond" truecount="4" falsecount="2"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="25" count="0" type="stmt"/>
+        <line num="34" count="1" type="cond" truecount="6" falsecount="3"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="1" type="cond" truecount="7" falsecount="3"/>
+        <line num="39" count="0" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="48" count="1" type="stmt"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="50" count="1" type="stmt"/>
+        <line num="53" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="src">
+      <metrics statements="315" coveredstatements="198" conditionals="158" coveredconditionals="72" methods="97" coveredmethods="56"/>
+      <file name="CancellationTokenSource.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\CancellationTokenSource.ts">
+        <metrics statements="10" coveredstatements="8" conditionals="1" coveredconditionals="0" methods="6" coveredmethods="5"/>
+        <line num="1" count="5" type="stmt"/>
+        <line num="17" count="5" type="stmt"/>
+        <line num="18" count="10" type="stmt"/>
+        <line num="28" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="38" count="30" type="stmt"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="63" count="5" type="stmt"/>
+        <line num="67" count="10" type="stmt"/>
+        <line num="74" count="1" type="stmt"/>
+      </file>
+      <file name="Workflow.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\Workflow.ts">
+        <metrics statements="9" coveredstatements="9" conditionals="16" coveredconditionals="13" methods="2" coveredmethods="2"/>
+        <line num="1" count="5" type="stmt"/>
+        <line num="2" count="5" type="stmt"/>
+        <line num="3" count="5" type="stmt"/>
+        <line num="10" count="5" type="stmt"/>
+        <line num="14" count="7" type="stmt"/>
+        <line num="17" count="7" type="stmt"/>
+        <line num="19" count="7" type="stmt"/>
+        <line num="21" count="7" type="stmt"/>
+        <line num="37" count="7" type="cond" truecount="13" falsecount="3"/>
+      </file>
+      <file name="WorkflowBuilder.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowBuilder.ts">
+        <metrics statements="23" coveredstatements="23" conditionals="12" coveredconditionals="10" methods="6" coveredmethods="6"/>
+        <line num="4" count="5" type="stmt"/>
+        <line num="6" count="5" type="stmt"/>
+        <line num="20" count="5" type="stmt"/>
+        <line num="21" count="7" type="stmt"/>
+        <line num="22" count="7" type="stmt"/>
+        <line num="25" count="7" type="stmt"/>
+        <line num="34" count="7" type="stmt"/>
+        <line num="36" count="7" type="stmt"/>
+        <line num="38" count="7" type="stmt"/>
+        <line num="47" count="7" type="stmt"/>
+        <line num="48" count="7" type="stmt"/>
+        <line num="50" count="7" type="cond" truecount="3" falsecount="1"/>
+        <line num="51" count="17" type="stmt"/>
+        <line num="54" count="7" type="stmt"/>
+        <line num="56" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="57" count="7" type="stmt"/>
+        <line num="60" count="7" type="cond" truecount="3" falsecount="0"/>
+        <line num="61" count="2" type="stmt"/>
+        <line num="62" count="1" type="stmt"/>
+        <line num="64" count="1" type="stmt"/>
+        <line num="68" count="7" type="stmt"/>
+        <line num="69" count="7" type="cond" truecount="3" falsecount="1"/>
+        <line num="71" count="1" type="stmt"/>
+      </file>
+      <file name="WorkflowContext.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowContext.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="14" count="5" type="stmt"/>
+        <line num="17" count="7" type="stmt"/>
+        <line num="20" count="7" type="stmt"/>
+        <line num="21" count="7" type="stmt"/>
+      </file>
+      <file name="WorkflowFault.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowFault.ts">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+      </file>
+      <file name="WorkflowStep.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowStep.ts">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="7" count="5" type="stmt"/>
+      </file>
+      <file name="WorkflowStepBuilder.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowStepBuilder.ts">
+        <metrics statements="73" coveredstatements="58" conditionals="35" coveredconditionals="20" methods="20" coveredmethods="14"/>
+        <line num="3" count="5" type="stmt"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="6" count="5" type="stmt"/>
+        <line num="7" count="5" type="stmt"/>
+        <line num="8" count="5" type="stmt"/>
+        <line num="29" count="5" type="stmt"/>
+        <line num="32" count="9" type="stmt"/>
+        <line num="33" count="9" type="stmt"/>
+        <line num="34" count="9" type="stmt"/>
+        <line num="37" count="9" type="stmt"/>
+        <line num="38" count="9" type="stmt"/>
+        <line num="39" count="9" type="stmt"/>
+        <line num="40" count="9" type="stmt"/>
+        <line num="44" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="48" count="0" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+        <line num="52" count="0" type="stmt"/>
+        <line num="56" count="1" type="stmt"/>
+        <line num="60" count="1" type="stmt"/>
+        <line num="62" count="1" type="stmt"/>
+        <line num="66" count="3" type="cond" truecount="0" falsecount="1"/>
+        <line num="68" count="3" type="stmt"/>
+        <line num="70" count="3" type="stmt"/>
+        <line num="74" count="4" type="cond" truecount="0" falsecount="1"/>
+        <line num="76" count="4" type="stmt"/>
+        <line num="78" count="4" type="stmt"/>
+        <line num="80" count="4" type="stmt"/>
+        <line num="84" count="0" type="stmt"/>
+        <line num="86" count="0" type="stmt"/>
+        <line num="90" count="2" type="cond" truecount="0" falsecount="1"/>
+        <line num="92" count="2" type="stmt"/>
+        <line num="94" count="2" type="stmt"/>
+        <line num="96" count="2" type="stmt"/>
+        <line num="100" count="3" type="cond" truecount="0" falsecount="1"/>
+        <line num="102" count="3" type="stmt"/>
+        <line num="104" count="3" type="stmt"/>
+        <line num="106" count="3" type="stmt"/>
+        <line num="110" count="17" type="stmt"/>
+        <line num="114" count="1" type="stmt"/>
+        <line num="118" count="17" type="stmt"/>
+        <line num="122" count="0" type="stmt"/>
+        <line num="126" count="9" type="stmt"/>
+        <line num="127" count="9" type="stmt"/>
+        <line num="129" count="9" type="stmt"/>
+        <line num="130" count="9" type="cond" truecount="3" falsecount="2"/>
+        <line num="132" count="9" type="stmt"/>
+        <line num="133" count="9" type="stmt"/>
+        <line num="134" count="9" type="stmt"/>
+        <line num="135" count="9" type="stmt"/>
+        <line num="136" count="9" type="stmt"/>
+        <line num="138" count="9" type="cond" truecount="1" falsecount="0"/>
+        <line num="139" count="3" type="stmt"/>
+        <line num="140" count="0" type="stmt"/>
+        <line num="142" count="0" type="stmt"/>
+        <line num="144" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="146" count="0" type="stmt"/>
+        <line num="150" count="9" type="stmt"/>
+        <line num="151" count="9" type="cond" truecount="0" falsecount="1"/>
+        <line num="153" count="9" type="stmt"/>
+        <line num="154" count="9" type="stmt"/>
+        <line num="156" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="157" count="0" type="stmt"/>
+        <line num="159" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="162" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="163" count="1" type="cond" truecount="3" falsecount="1"/>
+        <line num="165" count="0" type="stmt"/>
+        <line num="169" count="8" type="cond" truecount="1" falsecount="0"/>
+        <line num="170" count="8" type="stmt"/>
+        <line num="171" count="8" type="cond" truecount="3" falsecount="1"/>
+        <line num="173" count="1" type="stmt"/>
+        <line num="177" count="7" type="stmt"/>
+        <line num="181" count="0" type="stmt"/>
+      </file>
+      <file name="WorkflowStepBuilderAggregate.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowStepBuilderAggregate.ts">
+        <metrics statements="31" coveredstatements="17" conditionals="12" coveredconditionals="6" methods="10" coveredmethods="5"/>
+        <line num="4" count="5" type="stmt"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="6" count="5" type="stmt"/>
+        <line num="7" count="5" type="stmt"/>
+        <line num="8" count="5" type="stmt"/>
+        <line num="11" count="5" type="stmt"/>
+        <line num="13" count="4" type="stmt"/>
+        <line num="16" count="4" type="stmt"/>
+        <line num="17" count="4" type="stmt"/>
+        <line num="18" count="4" type="stmt"/>
+        <line num="22" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="26" count="0" type="stmt"/>
+        <line num="28" count="0" type="stmt"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="34" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="38" count="0" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="44" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="48" count="0" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+        <line num="54" count="4" type="cond" truecount="0" falsecount="1"/>
+        <line num="56" count="4" type="stmt"/>
+        <line num="58" count="4" type="stmt"/>
+        <line num="60" count="4" type="stmt"/>
+        <line num="64" count="4" type="stmt"/>
+        <line num="68" count="4" type="stmt"/>
+        <line num="72" count="0" type="stmt"/>
+        <line num="76" count="7" type="cond" truecount="6" falsecount="2"/>
+      </file>
+      <file name="WorkflowStepBuilderBase.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowStepBuilderBase.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="6" count="24" type="stmt"/>
+        <line num="7" count="24" type="stmt"/>
+        <line num="8" count="24" type="stmt"/>
+        <line num="9" count="24" type="stmt"/>
+        <line num="10" count="24" type="stmt"/>
+        <line num="11" count="24" type="stmt"/>
+        <line num="15" count="24" type="stmt"/>
+      </file>
+      <file name="WorkflowStepBuilderCondition.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowStepBuilderCondition.ts">
+        <metrics statements="63" coveredstatements="46" conditionals="48" coveredconditionals="20" methods="20" coveredmethods="13"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="6" count="5" type="stmt"/>
+        <line num="8" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="9" count="5" type="stmt"/>
+        <line num="10" count="5" type="stmt"/>
+        <line num="11" count="5" type="stmt"/>
+        <line num="117" count="5" type="stmt"/>
+        <line num="122" count="4" type="stmt"/>
+        <line num="126" count="4" type="stmt"/>
+        <line num="129" count="13" type="stmt"/>
+        <line num="133" count="4" type="stmt"/>
+        <line num="134" count="4" type="stmt"/>
+        <line num="135" count="4" type="stmt"/>
+        <line num="137" count="4" type="stmt"/>
+        <line num="148" count="1" type="stmt"/>
+        <line num="150" count="1" type="stmt"/>
+        <line num="154" count="0" type="stmt"/>
+        <line num="156" count="0" type="stmt"/>
+        <line num="160" count="0" type="stmt"/>
+        <line num="162" count="0" type="stmt"/>
+        <line num="166" count="12" type="cond" truecount="0" falsecount="1"/>
+        <line num="168" count="12" type="stmt"/>
+        <line num="170" count="12" type="stmt"/>
+        <line num="174" count="4" type="stmt"/>
+        <line num="176" count="4" type="stmt"/>
+        <line num="180" count="6" type="cond" truecount="0" falsecount="1"/>
+        <line num="182" count="6" type="stmt"/>
+        <line num="191" count="6" type="stmt"/>
+        <line num="195" count="3" type="stmt"/>
+        <line num="204" count="3" type="stmt"/>
+        <line num="208" count="4" type="stmt"/>
+        <line num="212" count="11" type="stmt"/>
+        <line num="216" count="0" type="stmt"/>
+        <line num="220" count="4" type="stmt"/>
+        <line num="221" count="4" type="stmt"/>
+        <line num="222" count="13" type="cond" truecount="6" falsecount="1"/>
+        <line num="223" count="7" type="stmt"/>
+        <line num="224" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="226" count="7" type="stmt"/>
+        <line num="228" count="7" type="stmt"/>
+        <line num="229" count="7" type="stmt"/>
+        <line num="230" count="7" type="cond" truecount="3" falsecount="1"/>
+        <line num="231" count="7" type="stmt"/>
+        <line num="233" count="7" type="cond" truecount="0" falsecount="1"/>
+        <line num="234" count="0" type="stmt"/>
+        <line num="235" count="0" type="stmt"/>
+        <line num="237" count="0" type="stmt"/>
+        <line num="239" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="241" count="0" type="stmt"/>
+        <line num="245" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="246" count="0" type="stmt"/>
+        <line num="247" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="249" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="251" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="253" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="255" count="0" type="stmt"/>
+        <line num="258" count="7" type="cond" truecount="4" falsecount="0"/>
+        <line num="260" count="7" type="cond" truecount="0" falsecount="1"/>
+        <line num="262" count="7" type="cond" truecount="0" falsecount="1"/>
+        <line num="264" count="7" type="cond" truecount="3" falsecount="1"/>
+        <line num="266" count="5" type="stmt"/>
+        <line num="270" count="0" type="stmt"/>
+        <line num="275" count="2" type="stmt"/>
+      </file>
+      <file name="WorkflowStepBuilderFinal.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowStepBuilderFinal.ts">
+        <metrics statements="21" coveredstatements="17" conditionals="6" coveredconditionals="3" methods="11" coveredmethods="8"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="16" count="5" type="stmt"/>
+        <line num="17" count="7" type="stmt"/>
+        <line num="22" count="7" type="stmt"/>
+        <line num="23" count="7" type="stmt"/>
+        <line num="24" count="7" type="stmt"/>
+        <line num="25" count="7" type="stmt"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="33" count="2" type="cond" truecount="0" falsecount="1"/>
+        <line num="35" count="2" type="stmt"/>
+        <line num="37" count="2" type="stmt"/>
+        <line num="41" count="7" type="stmt"/>
+        <line num="45" count="0" type="stmt"/>
+        <line num="49" count="7" type="stmt"/>
+        <line num="53" count="0" type="stmt"/>
+        <line num="57" count="9" type="stmt"/>
+        <line num="58" count="9" type="cond" truecount="3" falsecount="2"/>
+        <line num="60" count="9" type="stmt"/>
+        <line num="61" count="7" type="stmt"/>
+        <line num="62" count="7" type="stmt"/>
+        <line num="64" count="0" type="stmt"/>
+      </file>
+      <file name="WorkflowStepBuilderParallel.ts" path="C:\Users\tmarn\Projects\TsWorkflow\src\WorkflowStepBuilderParallel.ts">
+        <metrics statements="70" coveredstatements="5" conditionals="28" coveredconditionals="0" methods="19" coveredmethods="0"/>
+        <line num="4" count="5" type="stmt"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="6" count="5" type="stmt"/>
+        <line num="7" count="5" type="stmt"/>
+        <line num="21" count="5" type="stmt"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="27" count="0" type="stmt"/>
+        <line num="28" count="0" type="stmt"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="34" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="38" count="0" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="46" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="48" count="0" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+        <line num="54" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="56" count="0" type="stmt"/>
+        <line num="58" count="0" type="stmt"/>
+        <line num="60" count="0" type="stmt"/>
+        <line num="64" count="0" type="stmt"/>
+        <line num="66" count="0" type="stmt"/>
+        <line num="70" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="72" count="0" type="stmt"/>
+        <line num="74" count="0" type="stmt"/>
+        <line num="76" count="0" type="stmt"/>
+        <line num="80" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="82" count="0" type="stmt"/>
+        <line num="84" count="0" type="stmt"/>
+        <line num="86" count="0" type="stmt"/>
+        <line num="90" count="0" type="stmt"/>
+        <line num="94" count="0" type="stmt"/>
+        <line num="98" count="0" type="stmt"/>
+        <line num="102" count="0" type="stmt"/>
+        <line num="103" count="0" type="stmt"/>
+        <line num="105" count="0" type="stmt"/>
+        <line num="106" count="0" type="cond" truecount="0" falsecount="5"/>
+        <line num="108" count="0" type="stmt"/>
+        <line num="109" count="0" type="stmt"/>
+        <line num="110" count="0" type="stmt"/>
+        <line num="111" count="0" type="stmt"/>
+        <line num="112" count="0" type="stmt"/>
+        <line num="114" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="115" count="0" type="stmt"/>
+        <line num="116" count="0" type="stmt"/>
+        <line num="118" count="0" type="stmt"/>
+        <line num="120" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="122" count="0" type="stmt"/>
+        <line num="126" count="0" type="stmt"/>
+        <line num="127" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="129" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="130" count="0" type="stmt"/>
+        <line num="131" count="0" type="stmt"/>
+        <line num="133" count="0" type="stmt"/>
+        <line num="136" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="138" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="140" count="0" type="stmt"/>
+        <line num="141" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="143" count="0" type="stmt"/>
+        <line num="146" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="148" count="0" type="stmt"/>
+        <line num="150" count="0" type="stmt"/>
+        <line num="151" count="0" type="stmt"/>
+        <line num="153" count="0" type="stmt"/>
+        <line num="156" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="158" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="160" count="0" type="stmt"/>
+        <line num="164" count="0" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>
