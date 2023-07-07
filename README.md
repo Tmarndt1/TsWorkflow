@@ -1,6 +1,6 @@
 # Ts Workflow 
 
-The TsWorkflow library allows a developer to create simple or complex workflows with compile time validation between steps. The compile time validation reduces runtime exeptions from being thrown and provides a better experience for an end user. TsWorkflow leverages the fluent syntax to promote human readable code which helps developers quickly understand the different steps in a workflow.
+TsWorkflow is a lightweight and flexible TypeScript library for building and executing workflows. It provides a simple yet powerful way to define and orchestrate complex sequences of steps in a workflow, allowing developers to easily implement and manage business logic.
 
 [![Main](https://github.com/Tmarndt1/TsWorkflow/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/Tmarndt1/TsWorkflow/actions/workflows/main.yml)
 
