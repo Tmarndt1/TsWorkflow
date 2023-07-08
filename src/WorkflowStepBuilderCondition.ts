@@ -1,7 +1,7 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { WorkflowStep } from "./WorkflowStep";
-import { IWorkflowStepBuilderBasic } from "./WorkflowStepBuilder";
-import { WorkflowStepBuilderAggregate } from "./WorkflowStepBuilderAggregate";
+import { IWorkflowStepBuilder } from "./WorkflowStepBuilder";
+import { WorkflowStepBuilderMoveNext } from "./WorkflowStepBuilderMoveNext";
 import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 
 enum ConditionType {
@@ -26,7 +26,7 @@ export interface IWorkflowStepBuilderConditionAggregate<TInput, TOutput, TResult
     /**
      * Aggregates the conditional results
      */
-    endIf(): IWorkflowStepBuilderBasic<void, TOutput, TResult>;
+    endIf(): IWorkflowStepBuilder<void, TOutput, TResult>;
 }
 
 /**
@@ -83,7 +83,7 @@ export interface IWorkflowStepBuilderConditionRejected<TInput, TOutput, TResult>
     /**
      * Aggregates the conditional results
      */
-    endIf(): IWorkflowStepBuilderBasic<void, TOutput, TResult>;
+    endIf(): IWorkflowStepBuilder<void, TOutput, TResult>;
     /**
      * Conditional method that will run a step if the expression equates to true
      * @param expression The expression to evaluate
@@ -163,8 +163,8 @@ export class WorkflowStepBuilderCondition<TInput, TOutput, TResult> extends Work
         return this;
     }
 
-    public endIf(): IWorkflowStepBuilderBasic<void, TOutput, TResult> {
-        return this.next(new WorkflowStepBuilderAggregate(this))
+    public endIf(): IWorkflowStepBuilder<void, TOutput, TResult> {
+        return this.next(new WorkflowStepBuilderMoveNext())
     }
 
     public elseIf(expression: (input: TInput) => boolean): IWorkflowStepBuilderCondition<TInput, TOutput, TResult> {

@@ -44,6 +44,13 @@ class PrintAge extends WorkflowStep<string, string> {
     }
 }
 
+class ErrorStep extends WorkflowStep<Error, any> {
+    public run(input: Error): Promise<any> {
+        throw new Error("Method not implemented.");
+    }
+    
+}
+
 /**
  * Simple age workflow example that increments an age and prints age in final step
  */
@@ -61,15 +68,16 @@ export class Workflow1 extends Workflow<string> {
     public build(builder: IWorkflowBuilder<string>) {
         return builder
             .startWith(() => new Birthday(this._age))
-                .if(x => x == 18)
-                    .do(() => new Highschool())
-                .elseIf(x => x == 22)
-                    .do(() => new College())
-                .elseIf(x => x == 60)
-                    .do(() => new Retirement())
-                .else()
-                    .do(() => new UnknownAge())
-                .endIf()
-                .endWith(() => new PrintAge());
+                .error(() => new ErrorStep())
+            .if(x => x == 18)
+                .do(() => new Highschool())
+            .elseIf(x => x == 22)
+                .do(() => new College())
+            .elseIf(x => x == 60)
+                .do(() => new Retirement())
+            .else()
+                .do(() => new UnknownAge())
+            .endIf()
+            .endWith(() => new PrintAge());
     }
 }

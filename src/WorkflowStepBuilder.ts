@@ -1,5 +1,4 @@
 import CancellationTokenSource from "./CancellationTokenSource";
-import { WorkflowFault } from "./WorkflowFault";
 import { WorkflowStep } from "./WorkflowStep";
 import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 import { IWorkflowStepBuilderCondition, WorkflowStepBuilderCondition } from "./WorkflowStepBuilderCondition";
@@ -8,32 +7,34 @@ import { IWorkflowStepBuilderParallel, WorkflowStepBuilderParallel } from "./Wor
 
 export type ParallelType<T> = T extends () => WorkflowStep<unknown, infer TOutput> ? TOutput : null;
 
-export interface IWorkflowStepBuilderFailure<TInput, TOutput, TResult> {
-    continueWith<TNext>(factory: () => WorkflowStep<WorkflowFault, TNext>): IWorkflowStepBuilder<TInput, TOutput | TNext, TResult>; 
-}
 
-export interface IWorkflowStepBuilderBasic<TInput, TOutput, TResult> {
-    then<TNext>(factory: () => WorkflowStep<unknown, TNext>): IWorkflowStepBuilder<TOutput, TNext, TResult>;
-    endWith(step: () => WorkflowStep<TOutput, TResult>): IWorkflowStepBuilderEnd<TOutput, TResult>;
+export interface IWorkflowStepBuilder<TInput, TOutput, TResult> {
+    then<TNext>(factory: () => WorkflowStep<unknown, TNext>): IWorkflowStepBuilderExt<TOutput, TNext, TResult>;
+    endWith(factory: () => WorkflowStep<TOutput, TResult>): IWorkflowStepBuilderEnd<TOutput, TResult>;
     parallel<T extends (() => WorkflowStep<any, any>)[] | []>(steps: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult>;
 }
 
-export interface IWorkflowStepBuilder<TInput, TOutput, TResult> extends IWorkflowStepBuilderBasic<TInput, TOutput, TResult> {
+export interface IWorkflowStepBuilderExt<TInput, TOutput, TResult> extends IWorkflowStepBuilder<TInput, TOutput, TResult> {
     if(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TOutput, TResult>;
-    delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult>;
-    timeoutAfter(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult>;
-    onFailure(): IWorkflowStepBuilderFailure<TInput, TOutput, TResult>;
+    delay(milliseconds: number): IWorkflowStepBuilderExt<TInput, TOutput, TResult>;
+    timeout(milliseconds: number): IWorkflowStepBuilderExt<TInput, TOutput, TResult>;
+    error(factory: () => WorkflowStep<Error, TResult>): IWorkflowStepBuilderExt<TOutput, TOutput, TResult>;
 }
 
 export class WorkflowStepBuilder<TInput, TOutput, TResult> extends WorkflowStepBuilderBase<TInput, TOutput, TResult> 
-    implements IWorkflowStepBuilder<TInput, TOutput, TResult>, IWorkflowStepBuilderFailure<TInput, TOutput, TResult> {
+    implements IWorkflowStepBuilderExt<TInput, TOutput, TResult> {
     private _factory: () => WorkflowStep<TInput, TOutput>;
-    private _continueFactory: () => WorkflowStep<WorkflowFault, any> = null;
+    private _errorFactory: () => WorkflowStep<Error, any>;
 
     public constructor(factory: () => WorkflowStep<TInput, TOutput>) {
         super();
 
         this._factory = factory;
+    }
+    public error(factory: () => WorkflowStep<Error, TResult>): IWorkflowStepBuilderExt<TOutput, TOutput, TResult> {
+        this._errorFactory = factory;
+
+        return this;
     }
 
     public parallel<T extends (() => WorkflowStep<any, any>)[] | []>(factories: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
@@ -42,17 +43,7 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult> extends WorkflowStepB
         return this.next(new WorkflowStepBuilderParallel(factories));
     }
 
-    public onFailure(): IWorkflowStepBuilderFailure<TInput, TOutput, TResult> {
-        return this;
-    }
-
-    public continueWith<TNext>(factory: () => WorkflowStep<WorkflowFault, TNext>): IWorkflowStepBuilder<TInput, TOutput | TNext, TResult> {
-        this._continueFactory = factory;
-
-        return this;
-    }
-    
-    public timeoutAfter(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult> {
+    public timeout(milliseconds: number): IWorkflowStepBuilderExt<TInput, TOutput, TResult> {
         if (milliseconds < 1) throw Error("Timeout must be a postive integer");
         
         this._timeout = milliseconds;
@@ -68,13 +59,13 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult> extends WorkflowStepB
         return this._next as any as IWorkflowStepBuilderCondition<TOutput, TOutput, TResult>;
     }
 
-    public delay(milliseconds: number): IWorkflowStepBuilder<TInput, TOutput, TResult> {
+    public delay(milliseconds: number): IWorkflowStepBuilderExt<TInput, TOutput, TResult> {
         this._delayTime = milliseconds;
         
         return this;
     }
 
-    public then<TNext>(factory: () => WorkflowStep<TOutput, TNext>): IWorkflowStepBuilder<TOutput, TNext, TResult> {
+    public then<TNext>(factory: () => WorkflowStep<TOutput, TNext>): IWorkflowStepBuilderExt<TOutput, TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
         return this.next(new WorkflowStepBuilder(factory));
@@ -85,9 +76,9 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult> extends WorkflowStepB
 
         return this.next(new WorkflowStepBuilderFinal(factory));
     }
-    
+
     public hasContinueWith(): boolean {
-        return this._continueFactory != null;
+        return this._errorFactory != null;
     }
 
     public async run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
@@ -117,10 +108,8 @@ export class WorkflowStepBuilder<TInput, TOutput, TResult> extends WorkflowStepB
             
                         resolve(result);
                     } catch (error) {
-                        if (this.hasContinueWith()) {
-                            const fault = new WorkflowFault(error);
-                        
-                            const output = await this._continueFactory?.().run(fault);
+                        if (this.hasContinueWith()) {                        
+                            const output = await this._errorFactory?.().run(error);
 
                             resolve(output);
                         } else {

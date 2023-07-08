@@ -1,6 +1,6 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { WorkflowStep } from "./WorkflowStep";
-import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
+import { IWorkflowStepBuilderExt, WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 import { IWorkflowStepBuilderCondition, WorkflowStepBuilderCondition } from "./WorkflowStepBuilderCondition";
 import { IWorkflowStepBuilderEnd, WorkflowStepBuilderFinal } from "./WorkflowStepBuilderEnd";
@@ -10,7 +10,7 @@ type ReturnType<T> = T extends { new(): WorkflowStep<unknown, infer TOutput> }
 
 export interface IWorkflowStepBuilderParallel<TInput, TOutput, TResult> {
     if<TNext>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult>;
-    then<TNext>(builder: () => WorkflowStep<TOutput, TNext>): IWorkflowStepBuilder<TOutput, TNext, TResult>;
+    then<TNext>(builder: () => WorkflowStep<TOutput, TNext>): IWorkflowStepBuilderExt<TOutput, TNext, TResult>;
     endWith(builder: () => WorkflowStep<TOutput, TResult>): IWorkflowStepBuilderEnd<TOutput, TResult>;
     delay(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult>;
     timeout(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult>;
@@ -52,7 +52,7 @@ export class WorkflowStepBuilderParallel<TInput, TOutput, TResult> extends Workf
         return this;
     }
 
-    public then<TNext>(factory: () => WorkflowStep<TOutput, TNext>): IWorkflowStepBuilder<TOutput, TNext, TResult> {
+    public then<TNext>(factory: () => WorkflowStep<TOutput, TNext>): IWorkflowStepBuilderExt<TOutput, TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
         return this.next(new WorkflowStepBuilder(factory));

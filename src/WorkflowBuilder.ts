@@ -1,6 +1,6 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { WorkflowStep } from "./WorkflowStep";
-import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
+import { IWorkflowStepBuilderExt, WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 import { WorkflowStepBuilderFinal } from "./WorkflowStepBuilderEnd";
 
@@ -10,7 +10,7 @@ export interface IWorkflowBuilder<TResult> {
      * @param {WorkflowStep} builder The required WorfklowStep to start with.
      * @returns {WorkflowStepBuilder<TInput, TOutput, TResult>} A new WorkflowStepBuilder instance to chain additional steps or conditions.
      */
-    startWith<TInput, TOutput>(builder: () => WorkflowStep<TInput, TOutput>): IWorkflowStepBuilder<TInput, TOutput, TResult>;
+    startWith<TInput, TOutput>(builder: () => WorkflowStep<TInput, TOutput>): IWorkflowStepBuilderExt<TInput, TOutput, TResult>;
 }
 
 /**
@@ -28,7 +28,7 @@ export class WorkflowBuilder<TResult> implements IWorkflowBuilder<TResult> {
      * @param {WorkflowStep} factory The required WorfklowStep to start with.
      * @returns {WorkflowStepBuilder<TInput, TOutput, TResult>} A new WorkflowStepBuilder instance to chain additional steps or conditions.
      */
-    public startWith<TInput, TOutput>(factory: () => WorkflowStep<TInput, TOutput>): IWorkflowStepBuilder<TInput, TOutput, TResult> {
+    public startWith<TInput, TOutput>(factory: () => WorkflowStep<TInput, TOutput>): IWorkflowStepBuilderExt<TInput, TOutput, TResult> {
         let stepBuiler = new WorkflowStepBuilder(factory);
 
         this._firstStep = stepBuiler;
