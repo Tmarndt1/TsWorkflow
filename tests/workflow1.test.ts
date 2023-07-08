@@ -1,23 +1,23 @@
-import { Workflow1 } from "../examples/workflow1";
+import { Workflow1 } from "../examples/Workflow1";
 
-test('workflow1-test1', async () => {
-    const workflow1 = new Workflow1({ age: 17 });
+test('Workflow1-test1', async () => {
+    const workflow1 = new Workflow1(18);
 
     let result = await workflow1.run();
 
     expect(result).toEqual("Contgratulations on graduating Highschool!")
 });
 
-test('workflow1-test2', async () => {
-    const workflow1 = new Workflow1({ age: 21 });
+test('Workflow1-test2', async () => {
+    const workflow1 = new Workflow1(22);
 
     let result = await workflow1.run();
 
     expect(result).toEqual("Contgratulations on graduating College!")
 });
 
-test('workflow1-test3', async () => {
-    const workflow1 = new Workflow1({ age: 59 });
+test('Workflow1-test3', async () => {
+    const workflow1 = new Workflow1(60);
 
     let result = await workflow1.run();
 

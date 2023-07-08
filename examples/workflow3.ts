@@ -1,56 +1,51 @@
 import { Workflow } from "../src/Workflow";
 import { IWorkflowBuilder } from "../src/WorkflowBuilder";
-import { IWorkflowContext } from "../src/WorkflowContext";
-import { WorkflowFault } from "../src/WorkflowFault";
 import { WorkflowStep } from "../src/WorkflowStep";
 
-class Step1 extends WorkflowStep {
-    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
-        
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                reject("Workflow error");
-            }, 1000);
-        });
+class Step1 extends WorkflowStep<void, string> {
+    public constructor() {
+        super();
+    }
+
+    public run(): Promise<string> {
+        return Promise.resolve("1");
     }
 }
 
-class Step2 extends WorkflowStep {
-    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
-
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (context?.cancellationTokenSource?.token.isCancelled()) {
-                    reject();
-                } else {
-                    resolve();
-                }
-            }, 1000);
-        });
+class Step2 extends WorkflowStep<string, string> {
+    public run(input: string): Promise<string> {
+        return Promise.resolve(`${input},2`);
     }
 }
 
-class FaultStep extends WorkflowStep<WorkflowFault, string> {
-    public run(input: WorkflowFault, context: IWorkflowContext<void>): Promise<string> {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve("Fault step ran"); 
-            }, 1000);
-        });
+class Step3 extends WorkflowStep<string, string> {
+    public run(input: string): Promise<string> {
+        return Promise.resolve(`${input},3`);
     }
 }
 
 
-export class Workflow3 extends Workflow {
-    public id: string = "workflow-3"
+class Step4 extends WorkflowStep<string[], string[]> {
+    public run(input: string[]): Promise<string[]> {
+        return Promise.resolve(input);
+    }
+}
+
+
+/**
+ * Simple age workflow example that increments an age and prints age in final step
+ */
+export class Workflow3 extends Workflow<string[]> {
+    public id: string = "workflow-1"
     public version: string = "1";
 
-    public build(builder: IWorkflowBuilder<void, void>) {
+    public build(builder: IWorkflowBuilder<string[]>) {
         return builder
-            .startWith(Step1)
-            .endWith(Step2)
-                .expire(500);
+            .startWith(() => new Step1())
+            .parallel([
+                () => new Step2(),
+                () => new Step3()
+            ])
+            .endWith(() => new Step4());
     }
 }

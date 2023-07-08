@@ -1,10 +1,7 @@
-import CancellationTokenSource from "../src/CancellationTokenSource";
-import { Workflow2 } from "../examples/workflow2";
+import { Workflow2 } from "../examples/Workflow2";
 
-test('workflow1-test2', async () => {
-    try {
-        await new Workflow2().run(new CancellationTokenSource());
-    } catch (error) {
-        expect(error).toEqual("Workflow expired after 5000 ms")
-    }
+test('Workflow3-test1', async () => {
+    const workflow = new Workflow2();
+
+    expect(await workflow.run()).toEqual("Step2 ran...")
 });

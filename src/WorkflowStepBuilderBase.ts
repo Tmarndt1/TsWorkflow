@@ -1,25 +1,32 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { ErrorHandler } from "./ErrorHandler";
-import { WorkflowContext } from "./WorkflowContext";
 
-export abstract class WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> {
-    protected _context: WorkflowContext<TContext> | null = null;
+export abstract class WorkflowStepBuilderBase<TInput, TOutput, TResult> {
     protected _delayTime: number = 0;
-    protected _retryMilliseconds: number = 0;
+    protected _retryIn: number = 0;
     protected _errorHandler: ErrorHandler | null = null;
     protected _timeout: number | null = null;
     protected _cancellationTokenSource: CancellationTokenSource | null = null;
 
-    public constructor(context: WorkflowContext<TContext> | null) 
-    {
-        this._context = context;
+    protected _next: WorkflowStepBuilderBase<any, any, TResult>;
+
+    protected next<T extends WorkflowStepBuilderBase<TOutput, any, TResult>>(builder: T) {
+        this._next = builder;
+
+        return builder;
     }
 
-    public abstract getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null;
+    public getNext(): WorkflowStepBuilderBase<any, any, TResult> {
+        return this._next;
+    }
 
-    public abstract getTimeout(): number | null;
+    public getTimeout(): number | null {
+        return this._timeout;
+    }
 
-    public abstract hasNext(): boolean;
+    public hasNext(): boolean {
+        return this.next != null;
+    }
 
     public abstract run(input: TInput, cts: CancellationTokenSource): Promise<TOutput>;
 }

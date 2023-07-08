@@ -1,37 +1,35 @@
 import CancellationTokenSource from "./CancellationTokenSource";
-import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
 import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
-import { WorkflowStepBuilderFinal } from "./WorkflowStepBuilderFinal";
+import { WorkflowStepBuilderFinal } from "./WorkflowStepBuilderEnd";
 
-export interface IWorkflowBuilder<TContext, TResult> {
+export interface IWorkflowBuilder<TResult> {
     /**
      * Starts the workflow with the WorkflowStep dependency.
-     * @param {WorkflowStep} step The required WorfklowStep to start with.
-     * @returns {WorkflowStepBuilder<TInput, TOutput, TResult, TContext>} A new WorkflowStepBuilder instance to chain additional steps or conditions.
+     * @param {WorkflowStep} builder The required WorfklowStep to start with.
+     * @returns {WorkflowStepBuilder<TInput, TOutput, TResult>} A new WorkflowStepBuilder instance to chain additional steps or conditions.
      */
-    startWith<TInput, TOutput>(step: { new(): WorkflowStep<TInput, TOutput, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext>;
+    startWith<TInput, TOutput>(builder: () => WorkflowStep<TInput, TOutput>): IWorkflowStepBuilder<TInput, TOutput, TResult>;
 }
 
 /**
  * WorkflowBuilder class that allows for the chaining of various workflow steps and conditions. 
  */
-export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TContext, TResult> {
-    private _context: WorkflowContext<TContext> | null = null;
-    private _firstStep: WorkflowStepBuilderBase<any, any, TResult, TContext> | null = null;
+export class WorkflowBuilder<TResult> implements IWorkflowBuilder<TResult> {
+    private _firstStep: WorkflowStepBuilderBase<any, any, TResult> | null = null;
 
-    public constructor(context: WorkflowContext<TContext>) {
-        this._context = context;
+    public constructor() {
+        
     }
     
     /**
      * Starts the workflow with the WorkflowStep dependency.
-     * @param {WorkflowStep} step The required WorfklowStep to start with.
-     * @returns {WorkflowStepBuilder<TInput, TOutput, TResult, TContext>} A new WorkflowStepBuilder instance to chain additional steps or conditions.
+     * @param {WorkflowStep} factory The required WorfklowStep to start with.
+     * @returns {WorkflowStepBuilder<TInput, TOutput, TResult>} A new WorkflowStepBuilder instance to chain additional steps or conditions.
      */
-    public startWith<TInput, TOutput>(step: { new(): WorkflowStep<TInput, TOutput, TContext> }): IWorkflowStepBuilder<TInput, TOutput, TResult, TContext> {
-        let stepBuiler = new WorkflowStepBuilder(new step(), null, this._context);
+    public startWith<TInput, TOutput>(factory: () => WorkflowStep<TInput, TOutput>): IWorkflowStepBuilder<TInput, TOutput, TResult> {
+        let stepBuiler = new WorkflowStepBuilder(factory);
 
         this._firstStep = stepBuiler;
 
@@ -59,7 +57,7 @@ export class WorkflowBuilder<TContext, TResult> implements IWorkflowBuilder<TCon
     
             if (expiration != null && expiration > 0) {
                 setTimeout(() => {
-                    cts.cancel();
+                    cts?.cancel();
 
                     reject(`Workflow expired after ${expiration} ms`);
                 }, expiration);

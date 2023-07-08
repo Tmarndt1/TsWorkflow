@@ -1,48 +1,38 @@
 import CancellationTokenSource from "./CancellationTokenSource";
-import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
 import { IWorkflowStepBuilder, WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 import { IWorkflowStepBuilderCondition, WorkflowStepBuilderCondition } from "./WorkflowStepBuilderCondition";
-import { IWorkflowStepBuilderFinal, WorkflowStepBuilderFinal } from "./WorkflowStepBuilderFinal";
+import { IWorkflowStepBuilderEnd, WorkflowStepBuilderFinal } from "./WorkflowStepBuilderEnd";
 
-type ReturnType<T> = T extends { new(): WorkflowStep<unknown, infer TOutput, unknown> }
+type ReturnType<T> = T extends { new(): WorkflowStep<unknown, infer TOutput> }
     ? TOutput : null;
 
-export interface IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> {
-    if<TNext>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext>;
-    then<TNext>(step: { new(): WorkflowStep<TOutput, TNext, TContext> }): IWorkflowStepBuilder<TOutput, TNext, TResult, TContext>;
-    endWith(step: { new(): WorkflowStep<TOutput, TResult, TContext> }): IWorkflowStepBuilderFinal<TOutput, TResult, TContext>;
-    delay(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext>;
-    timeout(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext>;
-    parallel<T extends { new(): WorkflowStep<any, any, TContext> }[] | []>(steps: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult, TContext>;
+export interface IWorkflowStepBuilderParallel<TInput, TOutput, TResult> {
+    if<TNext>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult>;
+    then<TNext>(builder: () => WorkflowStep<TOutput, TNext>): IWorkflowStepBuilder<TOutput, TNext, TResult>;
+    endWith(builder: () => WorkflowStep<TOutput, TResult>): IWorkflowStepBuilderEnd<TOutput, TResult>;
+    delay(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult>;
+    timeout(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult>;
+    parallel<T extends (() => WorkflowStep<any, any>)[] | []>(steps: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult>;
 }
 
-export class WorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> {
-    private _steps: WorkflowStep<any, any, TContext>[];
-    private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
-    private _next: WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null = null;
+export class WorkflowStepBuilderParallel<TInput, TOutput, TResult> extends WorkflowStepBuilderBase<TInput, TOutput, TResult> implements IWorkflowStepBuilderParallel<TInput, TOutput, TResult> {
+    private _factories: (() => WorkflowStep<any, any>)[];
 
-    public constructor(steps: WorkflowStep<any, any, TContext>[],  last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext> | null) {
-        super(context);
-        this._steps = steps;
-        this._last = last;
-        this._context = context;
+    public constructor(factories: (() => WorkflowStep<any, any>)[]) {
+        super();
+
+        this._factories = factories;
     }
 
-    public parallel<T extends (new () => WorkflowStep<any, any, TContext>)[] | []>(steps: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult, TContext> {
-        if (!(steps instanceof Array)) throw Error("Steps must be an array");
+    public parallel<T extends (() => WorkflowStep<any, any>)[] | []>(factories: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult> {
+        if (!(factories instanceof Array)) throw Error("Steps must be an array");
 
-        let instances = (steps as Array<new () => WorkflowStep<TInput, any, TContext>>).map(step => new step());
-
-        let parallel = new WorkflowStepBuilderParallel(instances, this, this._context);
-
-        this._next = parallel;
-
-        return parallel as any;
+        return this.next(new WorkflowStepBuilderParallel(factories));
     }
     
-    public timeout(milliseconds: number ): IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> {
+    public timeout(milliseconds: number ): IWorkflowStepBuilderParallel<TInput, TOutput, TResult> {
         if (milliseconds < 1) throw Error("Timeout must be a postive integer");
         
         this._timeout = milliseconds;
@@ -50,52 +40,28 @@ export class WorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> ext
         return this;
     }
 
-    public if<TNext>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext> {
+    public if<TNext>(func: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TNext, TResult> {
         if (func == null) throw new Error("Conditional function cannot be null");
         
-        let stepBuiler = new WorkflowStepBuilderCondition<TOutput, TNext, TResult, TContext>(this, this._context, func);
-
-        this._next = stepBuiler;
-
-        return stepBuiler;
+        return this.next(new WorkflowStepBuilderCondition<TOutput, TNext, TResult>(this, func));
     }
 
-    public delay(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> {
+    public delay(milliseconds: number): IWorkflowStepBuilderParallel<TInput, TOutput, TResult> {
         this._delayTime = milliseconds;
         
         return this;
     }
 
-    public then<TNext>(step: new () => WorkflowStep<TOutput, TNext, TContext>): IWorkflowStepBuilder<TOutput, TNext, TResult, TContext> {
-        if (step == null) throw new Error("Step cannot be null");
-        
-        let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);
+    public then<TNext>(factory: () => WorkflowStep<TOutput, TNext>): IWorkflowStepBuilder<TOutput, TNext, TResult> {
+        if (factory == null) throw new Error("Factory cannot be null");
 
-        this._next = stepBuiler;
-
-        return stepBuiler;
+        return this.next(new WorkflowStepBuilder(factory));
     }
 
-    public endWith(step: new () => WorkflowStep<TOutput, TResult, TContext>): IWorkflowStepBuilderFinal<TOutput, TResult, TContext> {
-        if (step == null) throw new Error("Step cannot be null");
-        
-        let stepBuiler = new WorkflowStepBuilderFinal(new step(), this, this._context);
+    public endWith(factory: () => WorkflowStep<TOutput, TResult>): IWorkflowStepBuilderEnd<TOutput, TResult> {
+        if (factory == null) throw new Error("Factory cannot be null");
 
-        this._next = stepBuiler;
-
-        return stepBuiler;
-    }
-
-    public hasNext(): boolean {
-        return this._next != null;
-    }
-
-    public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null {
-        return this._next;
-    }
-
-    public getTimeout(): number | null {
-        return this._timeout;
+        return this.next(new WorkflowStepBuilderFinal(factory));
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
@@ -128,7 +94,7 @@ export class WorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> ext
 
                     if (this.hasNext()) {
                         try {
-                            output = await Promise.all(this._steps.map(x => x.run(input, this._context)));
+                            output = await Promise.all(this._factories.map(factory => factory().run(input)));
                         } catch (error) {
                             return reject(error);
                         }
@@ -148,7 +114,7 @@ export class WorkflowStepBuilderParallel<TInput, TOutput, TResult, TContext> ext
                         resolve(output);
                     } else {
                         try {
-                            output = await Promise.all(this._steps.map(x => x.run(input, this._context)));
+                            output = await Promise.all(this._factories.map(factory => factory().run(input)));
                         } catch (error) {
                             reject(error);
                         }

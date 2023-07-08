@@ -1,75 +1,41 @@
 import CancellationTokenSource from "./CancellationTokenSource";
-import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
 import { IWorkflowStepBuilder, IWorkflowStepBuilderBasic, ParallelType, WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
 import { IWorkflowStepBuilderCondition, WorkflowStepBuilderCondition } from "./WorkflowStepBuilderCondition";
-import { IWorkflowStepBuilderFinal, WorkflowStepBuilderFinal } from "./WorkflowStepBuilderFinal";
+import { IWorkflowStepBuilderEnd, WorkflowStepBuilderFinal } from "./WorkflowStepBuilderEnd";
 import { IWorkflowStepBuilderParallel, WorkflowStepBuilderParallel } from "./WorkflowStepBuilderParallel";
 
 
-export class WorkflowStepBuilderAggregate<TInput, TOutput, TResult, TContext> extends WorkflowStepBuilderBase<TInput, TOutput, TResult, TContext> implements IWorkflowStepBuilderBasic<TInput, TOutput, TResult, TContext> {
-    private _last: WorkflowStepBuilderBase<any, TInput, TResult, TContext>;
-    private _next: WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null = null;
+export class WorkflowStepBuilderAggregate<TInput, TOutput, TResult> extends WorkflowStepBuilderBase<TInput, TOutput, TResult> implements IWorkflowStepBuilderBasic<TInput, TOutput, TResult> {
 
-    public constructor(last: WorkflowStepBuilderBase<any, any, TResult, TContext>, context: WorkflowContext<TContext> | null) {
-        super(context);
-        this._last = last;
-        this._context = context;
+    public constructor(last: WorkflowStepBuilderBase<any, any, TResult>) {
+        super();
     }
 
-    public parallel<T extends (new () => WorkflowStep<any, any, TContext>)[] | []>(steps: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult, TContext> {
-        if (!(steps instanceof Array)) throw Error("Steps must be an array");
+    public parallel<T extends (() => WorkflowStep<any, any>)[] | []>(factories: T): IWorkflowStepBuilderParallel<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
+        if (!(factories instanceof Array)) throw Error("Steps must be an array");
 
-        let instances = (steps as Array<new () => WorkflowStep<TInput, any, TContext>>).map(step => new step());
-
-        let parallel = new WorkflowStepBuilderParallel(instances, this, this._context);
-
-        this._next = parallel;
-
-        return parallel as any;
+        return this.next(new WorkflowStepBuilderParallel(factories));
     }
 
-    public if(expression: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TOutput, TResult, TContext> {
+    public if(expression: (output: TOutput) => boolean): IWorkflowStepBuilderCondition<TOutput, TOutput, TResult> {
         if (expression == null) throw new Error("Expression function cannot be null");
         
-        let stepBuiler = new WorkflowStepBuilderCondition<TOutput, TOutput, TResult, TContext>(this, this._context, expression);
-
-        this._next = stepBuiler;
-
-        return stepBuiler;
+        return this.next(new WorkflowStepBuilderCondition<TOutput, TOutput, TResult>(this, expression));
     }
 
-    public then<TNext>(step: new () => WorkflowStep<TOutput, TNext, TContext>): IWorkflowStepBuilder<TOutput, TNext, TResult, TContext> {
-        if (step == null) throw new Error("Step cannot be null");
+    public then<TNext>(factory: () => WorkflowStep<TOutput, TNext>): IWorkflowStepBuilder<TOutput, TNext, TResult> {
+        if (factory == null) throw new Error("Factory cannot be null");
         
-        let stepBuiler = new WorkflowStepBuilder(new step(), this, this._context);
-
-        this._next = stepBuiler;
-
-        return stepBuiler;
+        return this.next(new WorkflowStepBuilder(factory));
     }
 
-    public endWith(step: new () => WorkflowStep<TOutput, TResult, TContext>): IWorkflowStepBuilderFinal<TOutput, TResult, TContext> {
-        if (step == null) throw new Error("Step cannot be null");
+    public endWith(builder: () => WorkflowStep<TOutput, TResult>): IWorkflowStepBuilderEnd<TOutput, TResult> {
+        if (builder == null) throw new Error("Factory cannot be null");
         
-        let stepBuiler = new WorkflowStepBuilderFinal(new step(), this, this._context);
+        return this.next(new WorkflowStepBuilderFinal(builder));
 
-        this._next = stepBuiler;
-
-        return stepBuiler;
-    }
-
-    public hasNext(): boolean {
-        return this._next != null;
-    }
-
-    public getNext(): WorkflowStepBuilderBase<TOutput, any, TResult, TContext> | null {
-        return this._next;
-    }
-
-    public getTimeout(): number | null {
-        return this._timeout;
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {

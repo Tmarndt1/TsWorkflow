@@ -1,10 +1,11 @@
-import CancellationTokenSource from "../src/CancellationTokenSource";
-import { Workflow3 } from "../examples/workflow3";
+import { Workflow3 } from "../examples/Workflow3";
 
-test('workflow1-test3', async () => {
-    try {
-        await new Workflow3().run(new CancellationTokenSource());
-    } catch (error) {
-        expect(error).toEqual("Workflow expired after 500 ms")
-    }
+test('Workflow3-test1', async () => {
+    const workflow = new Workflow3();
+
+    let array: string[] = await workflow.run();
+
+    expect(array.length).toBe(2);
+    expect(array[0]).toBe("1,2");
+    expect(array[1]).toBe("1,3");
 });

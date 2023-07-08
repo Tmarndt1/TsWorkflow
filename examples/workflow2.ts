@@ -1,85 +1,34 @@
 import { Workflow } from "../src/Workflow";
 import { IWorkflowBuilder } from "../src/WorkflowBuilder";
-import { IWorkflowContext } from "../src/WorkflowContext";
 import { WorkflowStep } from "../src/WorkflowStep";
 
-class Step1 extends WorkflowStep {
-    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
-        
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (context?.cancellationTokenSource?.token.isCancelled()) {
-                    reject();
-                } else {
-                    resolve();
-                }
-            }, 100);
-        });
+class Step1 extends WorkflowStep<void, string> {
+    public constructor() {
+        super();
+    }
+
+    public run(input: void): Promise<string> {
+        return Promise.resolve("Step1 ran...");
     }
 }
 
-class Step2 extends WorkflowStep {
-    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
-
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (context?.cancellationTokenSource?.token.isCancelled()) {
-                    reject();
-                } else {
-                    resolve();
-                }
-            }, 100);
-        });
+class Step2 extends WorkflowStep<void, string> {
+    public run(): Promise<string> {
+        return Promise.resolve("Step2 ran...");
     }
 }
 
-class Step3 extends WorkflowStep {
-    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
 
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (context?.cancellationTokenSource?.token.isCancelled()) {
-                    reject();
-                } else {
-                    resolve();
-                }
-            }, 100);
-        });
-    }
-}
-
-class Step4 extends WorkflowStep {
-    public run(input: void, context: IWorkflowContext<void>): Promise<void> {
-        if (context?.cancellationTokenSource?.token.isCancelled()) return Promise.reject();
-
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (context?.cancellationTokenSource?.token.isCancelled()) {
-                    reject();
-                } else {
-                    resolve();
-                }
-            }, 100);
-        });
-    }
-}
-
-export class Workflow2 extends Workflow {
-    public id: string = "workflow-2"
+/**
+ * Simple age workflow example that increments an age and prints age in final step
+ */
+export class Workflow2 extends Workflow<string> {
+    public id: string = "workflow-1"
     public version: string = "1";
 
-    public build(builder: IWorkflowBuilder<void, void>) {
+    public build(builder: IWorkflowBuilder<string>) {
         return builder
-            .startWith(Step1)
-                .timeout(150)
-            .then(Step2)
-                .timeout(150)
-            .then(Step3)
-                .timeout(150)
-            .endWith(Step4)
-                .expire(500);
+            .startWith(() => new Step1())
+            .endWith(() => new Step2());
     }
 }
