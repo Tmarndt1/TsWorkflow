@@ -11,11 +11,11 @@ enum ConditionType {
 }
 
 interface ICondition {
-    delay: number | null;
-    timeout: number | null;
+    delay: number;
+    timeout: number;
     type: ConditionType;
     factory: () => IWorkflowStep<unknown, unknown>;
-    condition: ((args: any) => boolean) | null;
+    condition: ((args: any) => boolean);
     reject: boolean;
 }
 

@@ -23,7 +23,7 @@ export class WorkflowExecutorParallel<TInput, TOutput, TResult> extends Workflow
     public constructor(factories: (() => IWorkflowStep<any, any>)[]) {
         super();
 
-        this._factories = factories;
+        this._factories = [...factories];
     }
 
     public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowExecutorParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult> {

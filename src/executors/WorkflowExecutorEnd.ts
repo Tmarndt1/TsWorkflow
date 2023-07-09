@@ -12,7 +12,7 @@ export interface IWorkflowExecutorEnd<TInput, TResult> {
 }
 
 export class WorkflowExecutorFinal<TInput, TResult> extends WorkflowExecutorBase<TInput, TResult, TResult> implements IWorkflowExecutorEnd<TInput, TResult> {    
-    private _expiration: number | null = null;
+    private _expiration: number;
     private _factory: () => IWorkflowStep<TInput, TResult>;
 
     public constructor(factory: () => IWorkflowStep<TInput, TResult>) {
