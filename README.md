@@ -14,9 +14,9 @@ If you like or are using this project please give it a star. Thanks!
 
 ## Usage
 ```typescript
-class Step1 extends WorkflowStep<void, string> {
-    public run(): Promise<string> {
-        return Promise.resolve("1");
+class Step1 extends WorkflowStep<number, string> {
+    public run(input: number): Promise<string> {
+        return Promise.resolve(`${input}`);
     }
 }
 
@@ -32,8 +32,8 @@ class Step3 extends WorkflowStep<string, string> {
     }
 }
 
-export class RandomWorkflow extends Workflow<string[]> {
-    public build(builder: IWorkflowBuilder<string[]>) {
+export class RandomWorkflow extends Workflow<number, string[]> {
+    public build(builder: IWorkflowBuilder<number, string[]>) {
         return builder
             // startWith API to define the first workflow step to run
             .startWith(() => new Step1())
@@ -55,7 +55,7 @@ export class RandomWorkflow extends Workflow<string[]> {
 const workflow = new RandomWorkflow();
 
 try {
-    const output: string[] = await workflow.run();
+    const output: string[] = await workflow.run(1);
 
     // Handle businesss logic
 } catch (error) {
