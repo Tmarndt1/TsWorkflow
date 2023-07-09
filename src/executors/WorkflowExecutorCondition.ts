@@ -5,10 +5,10 @@ import { WorkflowExecutorMoveNext } from "./WorkflowExecutorMoveNext";
 import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
 
 interface ICondition {
-    delay: number;
-    timeout: number;
+    delay: () => number;
+    timeout: () => number;
     factory: () => IWorkflowStep<unknown, unknown>;
-    condition: ((args: any) => boolean);
+    condition: (args: any) => boolean;
     stop: boolean;
 }
 
@@ -30,12 +30,12 @@ export interface IWorkflowExecutorConditionElseDo<TInput, TOutput, TResult> exte
      * Delays the step
      * @param {number} milliseconds the time in milliseconds to delay the step
      */
-    delay(milliseconds: number): IWorkflowExecutorConditionElseDo<TInput, TOutput, TResult>;
+    delay(func: () => number): IWorkflowExecutorConditionElseDo<TInput, TOutput, TResult>;
     /**
      * Defines the amount of time the step will timeout after
      * @param {number} milliseconds the time in milliseconds the step will timeout after
      */
-    timeout(milliseconds: number): IWorkflowExecutorConditionElseDo<TInput, TOutput, TResult>;
+    timeout(func: () => number): IWorkflowExecutorConditionElseDo<TInput, TOutput, TResult>;
 }
 
 export interface IWorkflowExecutorConditionElse<TInput, TOutput, TResult> {
@@ -54,12 +54,12 @@ export interface IWorkflowExecutorConditionIf<TInput, TOutput, TResult> extends 
      * Delays the step
      * @param {number} milliseconds the time in milliseconds to delay the step
      */
-    delay(milliseconds: number): IWorkflowExecutorConditionIf<TInput, TOutput, TResult>;
+    delay(func: () => number): IWorkflowExecutorConditionIf<TInput, TOutput, TResult>;
     /**
      * Defines the amount of time the step will timeout after
      * @param {number} milliseconds the time in milliseconds the step will timeout after
      */
-    timeout(milliseconds: number): IWorkflowExecutorConditionIf<TInput, TOutput, TResult>;
+    timeout(func: () => number): IWorkflowExecutorConditionIf<TInput, TOutput, TResult>;
     /**
      * Conditional method that will run a step if the expression equates to true
      * @param expression The expression to evaluate
@@ -134,18 +134,14 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
         return this;
     }
     
-    public timeout(milliseconds: number): any {
-        if (milliseconds < 1) throw Error("Timeout must be a postive integer");
-
-        this.current.timeout = milliseconds;
+    public timeout(func: () => number): any {
+        this.current.timeout = func;
 
         return this;
     }
     
-    public delay(milliseconds: number): any {
-        if (milliseconds < 1) throw Error("Delay must be a postive integer");
-
-        this.current.delay = milliseconds;
+    public delay(func: () => number): any {
+        this.current.delay = func;
 
         return this;
     }
@@ -195,8 +191,8 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
             try {
                 if (branch.stop) reject("Workflow manually rejected");
 
-                let delay: number | null = branch?.delay ?? 0;
-                let timeout: number = branch?.timeout ?? 0;
+                let delay: number | null = branch?.delay?.() ?? 0;
+                let timeout: number = branch?.timeout?.() ?? 0;
                 let expired: boolean = false;
 
                 let delayTimeout: NodeJS.Timeout;
@@ -210,15 +206,15 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
 
                         if (delay != null) clearTimeout(delayTimeout);
 
-                        reject(`Step timed out after ${branch.timeout} ms`);
-                    }, branch.timeout ?? 0);
+                        reject(`Step timed out after ${timeout} ms`);
+                    }, timeout);
                 }
 
                 delayTimeout = setTimeout(async () => {
                     try {
                         clearInterval(expireTimeout);
 
-                        if (expired) return reject(`Step timed out after ${branch.timeout} ms`);
+                        if (expired) return reject(`Step timed out after ${timeout} ms`);
 
                         if (this.hasNext()) {
                             resolve(

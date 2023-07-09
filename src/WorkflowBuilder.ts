@@ -41,18 +41,23 @@ export class WorkflowBuilder<TResult> implements IWorkflowBuilder<TResult> {
      */
     public run(cts: CancellationTokenSource): Promise<TResult> {
         return new Promise(async (resolve, reject) => {
-            let executor = this._executor;
+            let expiration: number = 0;
+            let expired: boolean = false;
+            let executor: WorkflowExecutorBase<any, any, TResult> = this._executor;
+            let expirationTimeout: NodeJS.Timeout;
 
-            while (executor?.hasNext()) {
+            while (executor != null) {
                 executor = executor.getNext();
+
+                if (!(executor instanceof WorkflowExecutorEnd)) continue;
+
+                expiration = executor.expiration();
             }
 
-            let expiration: number | null = 0;
-    
-            if (executor instanceof WorkflowExecutorEnd) expiration = executor.getExpiration();
-    
             if (expiration > 0) {
-                setTimeout(() => {
+                expirationTimeout = setTimeout(() => {
+                    expired = true;
+
                     cts?.cancel();
 
                     reject(`Workflow expired after ${expiration} ms`);
@@ -60,7 +65,13 @@ export class WorkflowBuilder<TResult> implements IWorkflowBuilder<TResult> {
             }
 
             try {
-                resolve(await this._executor?.run(null, cts));
+                let output: TResult = await this._executor?.run(null, cts);
+
+                clearInterval(expirationTimeout);
+
+                if (expired) return;
+                
+                resolve(output);
             } catch (error) {
                 reject(error);
             }

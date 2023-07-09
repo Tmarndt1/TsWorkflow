@@ -12,8 +12,8 @@ export interface IWorkflowExecutorParallel<TInput, TOutput, TResult> {
     if<TNext>(func: (output: TOutput) => boolean): IWorkflowExecutorCondition<TOutput, TNext, TResult>;
     then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult>;
     endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult>;
-    delay(milliseconds: number): IWorkflowExecutorParallel<TInput, TOutput, TResult>;
-    timeout(milliseconds: number): IWorkflowExecutorParallel<TInput, TOutput, TResult>;
+    delay(func: () => number): IWorkflowExecutorParallel<TInput, TOutput, TResult>;
+    timeout(func: () => number): IWorkflowExecutorParallel<TInput, TOutput, TResult>;
     parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(steps: T): IWorkflowExecutorParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult>;
 }
 
@@ -32,10 +32,8 @@ export class WorkflowExecutorParallel<TInput, TOutput, TResult> extends Workflow
         return this.next(new WorkflowExecutorParallel(factories));
     }
     
-    public timeout(milliseconds: number ): IWorkflowExecutorParallel<TInput, TOutput, TResult> {
-        if (milliseconds < 1) throw Error("Timeout must be a postive integer");
-        
-        this._timeout = milliseconds;
+    public timeout(func: () => number): IWorkflowExecutorParallel<TInput, TOutput, TResult> {        
+        this._timeout = func;
         
         return this;
     }
@@ -46,8 +44,8 @@ export class WorkflowExecutorParallel<TInput, TOutput, TResult> extends Workflow
         return this.next(new WorkflowExecutorCondition<TOutput, TNext, TResult>(func));
     }
 
-    public delay(milliseconds: number): IWorkflowExecutorParallel<TInput, TOutput, TResult> {
-        this._delay = milliseconds;
+    public delay(func: () => number): IWorkflowExecutorParallel<TInput, TOutput, TResult> {
+        this._delay = func;
         
         return this;
     }
@@ -69,8 +67,8 @@ export class WorkflowExecutorParallel<TInput, TOutput, TResult> extends Workflow
             if (cts?.token.isCancelled()) return reject("Workflow has been cancelled");
 
             try {
-                let timeout: number = this._timeout ?? 0;
-                let delay: number = this._delay ?? 0;
+                let timeout: number = this._timeout?.() ?? 0;
+                let delay: number = this._delay?.() ?? 0;
                 let expired: boolean = false;
 
                 let delayTimeout: NodeJS.Timeout;
@@ -85,7 +83,7 @@ export class WorkflowExecutorParallel<TInput, TOutput, TResult> extends Workflow
                         clearTimeout(delayTimeout);
 
                         reject(`Step timed out after ${timeout} ms`);
-                    }, this._timeout ?? 0);
+                    }, timeout);
                 }
     
                 delayTimeout = setTimeout(async () => {

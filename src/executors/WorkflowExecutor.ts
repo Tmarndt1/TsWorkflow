@@ -16,8 +16,8 @@ export interface IWorkflowExecutor<TInput, TOutput, TResult> {
 
 export interface IWorkflowExecutorExt<TInput, TOutput, TResult> extends IWorkflowExecutor<TInput, TOutput, TResult> {
     if(func: (output: TOutput) => boolean): IWorkflowExecutorCondition<TOutput, TOutput, TResult>;
-    delay(milliseconds: number): IWorkflowExecutorExt<TInput, TOutput, TResult>;
-    timeout(milliseconds: number): IWorkflowExecutorExt<TInput, TOutput, TResult>;
+    delay(func: () => number): IWorkflowExecutorExt<TInput, TOutput, TResult>;
+    timeout(func: () => number): IWorkflowExecutorExt<TInput, TOutput, TResult>;
     // error(factory: () => WorkflowStep<Error, TResult>): IWorkflowExecutorExt<TOutput, TOutput, TResult>;
 }
 
@@ -43,10 +43,8 @@ export class WorkflowExecutor<TInput, TOutput, TResult> extends WorkflowExecutor
         return this.next(new WorkflowExecutorParallel(factories));
     }
 
-    public timeout(milliseconds: number): IWorkflowExecutorExt<TInput, TOutput, TResult> {
-        if (milliseconds < 1) throw Error("Timeout must be a postive integer");
-        
-        this._timeout = milliseconds;
+    public timeout(func: () => number): IWorkflowExecutorExt<TInput, TOutput, TResult> {        
+        this._timeout = func;
         
         return this;
     }
@@ -59,8 +57,8 @@ export class WorkflowExecutor<TInput, TOutput, TResult> extends WorkflowExecutor
         return this._next as any as IWorkflowExecutorCondition<TOutput, TOutput, TResult>;
     }
 
-    public delay(milliseconds: number): IWorkflowExecutorExt<TInput, TOutput, TResult> {
-        this._delay = milliseconds;
+    public delay(func: () => number): IWorkflowExecutorExt<TInput, TOutput, TResult> {
+        this._delay = func;
         
         return this;
     }
@@ -89,8 +87,8 @@ export class WorkflowExecutor<TInput, TOutput, TResult> extends WorkflowExecutor
         try {
             return new Promise<TResult>((resolve, reject) => {
                 let expired: boolean = false;
-                const timeout = this._timeout ?? 0;
-                const delay = this._delay ?? 0;
+                const timeout = this._timeout?.() ?? 0;
+                const delay = this._delay?.() ?? 0;
 
                 let delayTimeout: NodeJS.Timeout;
                 let expireTimeout: NodeJS.Timeout;

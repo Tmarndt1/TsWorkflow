@@ -7,13 +7,13 @@ export interface IWorkflowExecutorEnd<TInput, TResult> {
      * Timeout for the entire workflow. If the timeout expires the workflow will be cancelled.
      * @param {number} milliseconds The number of milliseconds until the workflow expires.
      */
-    expire(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult>;
+    expire(func: () => number): IWorkflowExecutorEnd<TInput, TResult>;
 
-    delay(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult>;
+    delay(func: () => number): IWorkflowExecutorEnd<TInput, TResult>;
 }
 
 export class WorkflowExecutorEnd<TInput, TResult> extends WorkflowExecutorBase<TInput, TResult, TResult> implements IWorkflowExecutorEnd<TInput, TResult> {    
-    private _expiration: number;
+    private _expiration: () => number;
     private _factory: () => IWorkflowStep<TInput, TResult>;
 
     public constructor(factory: () => IWorkflowStep<TInput, TResult>) {
@@ -22,24 +22,20 @@ export class WorkflowExecutorEnd<TInput, TResult> extends WorkflowExecutorBase<T
         this._factory = factory;
     }
 
-    public delay(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult> {
-        if (milliseconds < 1) throw Error("Delay must be a postive integer");
-
-        this._delay = milliseconds;
+    public delay(func: () => number): IWorkflowExecutorEnd<TInput, TResult> {
+        this._delay = func;
 
         return this;
     }
 
-    public expire(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult> {
-        if (milliseconds < 1) throw Error("Timeout must be a postive integer");
-
-        this._expiration = milliseconds;
+    public expire(func: () => number): IWorkflowExecutorEnd<TInput, TResult> {
+        this._expiration = func;
 
         return this;
     }
 
-    public getExpiration(): number | null {
-        return this._expiration;
+    public expiration() {
+        return this._expiration?.() ?? 0;
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
@@ -53,7 +49,7 @@ export class WorkflowExecutorEnd<TInput, TResult> extends WorkflowExecutorBase<T
                     return reject(error);
                 }
                 
-            }, this._delay);
+            }, this._delay?.() ?? 0);
         });
     }
 }

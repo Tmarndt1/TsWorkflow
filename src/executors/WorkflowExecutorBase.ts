@@ -1,8 +1,8 @@
 import CancellationTokenSource from "../CancellationTokenSource";
 
 export abstract class WorkflowExecutorBase<TInput, TOutput, TResult> {
-    protected _delay: number = 0;
-    protected _timeout: number | null = null;
+    protected _delay: () => number;
+    protected _timeout: () => number;
     protected _next: WorkflowExecutorBase<any, any, TResult>;
 
     protected next<T extends WorkflowExecutorBase<TOutput, any, TResult>>(builder: T) {
