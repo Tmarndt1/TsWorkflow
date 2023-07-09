@@ -14,7 +14,7 @@ interface ICondition {
     delay: number | null;
     timeout: number | null;
     type: ConditionType;
-    step: IWorkflowStep<unknown, unknown> | null;
+    factory: () => IWorkflowStep<unknown, unknown>;
     condition: ((args: any) => boolean) | null;
     reject: boolean;
 }
@@ -132,7 +132,7 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
             timeout: null,
             type: ConditionType.If,
             condition: condition,
-            step: null,
+            factory: null,
             reject: false
         });
     }
@@ -155,10 +155,10 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
         return this;
     }
     
-    public do<TNext>(factory: ((() => IWorkflowStep<TOutput, TNext>) | ((input: TOutput) => Promise<TNext>))): IWorkflowExecutorConditionIf<TInput, TOutput | TNext, TResult> {
+    public do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorConditionIf<TInput, TOutput | TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
-        // this._current.step = factory;
+        this._current.factory = factory;
 
         return this;
     }
@@ -175,7 +175,7 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
             timeout: null,
             type: ConditionType.ElseIf,
             condition: expression,
-            step: null,
+            factory: null,
             reject: false
         });
 
@@ -188,7 +188,7 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
             timeout: null,
             type: ConditionType.Else,
             condition: null,
-            step: null,
+            factory: null,
             reject: false
         });
 
@@ -222,7 +222,7 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
 
                         if (this._maps[i].delay != null) {
                             setTimeout(async () => {
-                                let result: TOutput = await this._maps[i].step?.run(input) as TOutput;
+                                let result: TOutput = await this._maps[i].factory()?.run(input) as TOutput;
 
                                 if (hasExpired) return reject(timeoutMessage);
 
@@ -233,7 +233,7 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
                                 resolve(nextResult);       
                             }, this._maps[i].delay ?? 0);
                         } else {
-                            let result: TOutput = await this._maps[i].step?.run(input) as TOutput;
+                            let result: TOutput = await this._maps[i].factory()?.run(input) as TOutput;
 
                             if (hasExpired) return reject(timeoutMessage);
 
