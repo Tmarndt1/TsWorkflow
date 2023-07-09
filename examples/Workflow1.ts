@@ -14,20 +14,20 @@ class Highschool extends WorkflowStep<number, string> {
     }
 }
 
-class College extends WorkflowStep<number, string> {
-    public run(age: number): Promise<string> {
+class College extends WorkflowStep<number | string, string> {
+    public run(age: number | string): Promise<string> {
         return Promise.resolve("Contgratulations on graduating College!");
     }
 }
 
-class Retirement extends WorkflowStep<number, string> {
-    public run(age: number): Promise<string> {
+class Retirement extends WorkflowStep<number | string, string> {
+    public run(age: number | string): Promise<string> {
         return Promise.resolve("Contgratulations on retiring!");
     }
 }
 
-class UnknownAge extends WorkflowStep<number, string> {
-    public run(age: number): Promise<string> {
+class UnknownAge extends WorkflowStep<string, string> {
+    public run(age: number | string): Promise<string> {
         return Promise.resolve("Who knows...");
     }
 }
@@ -39,7 +39,6 @@ class PrintAge extends WorkflowStep<string[], string> {
 }
 
 export class Workflow1 extends Workflow<number, string> {    
-    private _age: number = 0;
     private _expiration: number = 0;
     private _timeout: number = 0;
 

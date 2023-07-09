@@ -1,23 +1,23 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { IWorkflowExecutorExt, WorkflowExecutor } from "./WorkflowExecutor";
-import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
-import { IWorkflowExecutorCondition, WorkflowExecutorCondition } from "./WorkflowExecutorCondition";
-import { IWorkflowExecutorEnd, WorkflowExecutorEnd } from "./WorkflowExecutorEnd";
+import { IWorkflowNextExtBuilder, WorkflowNextBuilder } from "./WorkflowNextBuilder";
+import { WorkflowBaseBuilder } from "./WorkflowBaseBuilder";
+import { IWorkflowConditionBuilder, WorkflowConditionBuilder } from "./WorkflowConditionBuilder";
+import { IWorkflowFinalBuilder, WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 
 type ReturnType<T> = T extends { new(): IWorkflowStep<unknown, infer TOutput> }
     ? TOutput : null;
 
-export interface IWorkflowExecutorParallel<TInput, TOutput, TResult> {
-    if(func: (output: TOutput) => boolean): IWorkflowExecutorCondition<TOutput, TOutput, TResult>;
-    then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult>;
-    endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult>;
-    delay(func: () => number): IWorkflowExecutorParallel<TInput, TOutput, TResult>;
-    timeout(func: () => number): IWorkflowExecutorParallel<TInput, TOutput, TResult>;
-    parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(steps: T): IWorkflowExecutorParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult>;
+export interface IWorkflowParallelBuilder<TInput, TOutput, TResult> {
+    if(func: (output: TOutput) => boolean): IWorkflowConditionBuilder<TOutput, TOutput, TResult>;
+    then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtBuilder<TOutput, TNext, TResult>;
+    endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult>;
+    delay(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult>;
+    timeout(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult>;
+    parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(steps: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult>;
 }
 
-export class WorkflowExecutorParallel<TInput, TOutput, TResult> extends WorkflowExecutorBase<TInput, TOutput, TResult> implements IWorkflowExecutorParallel<TInput, TOutput, TResult> {
+export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowBaseBuilder<TInput, TOutput, TResult> implements IWorkflowParallelBuilder<TInput, TOutput, TResult> {
     private _factories: (() => IWorkflowStep<any, any>)[];
 
     public constructor(factories: (() => IWorkflowStep<any, any>)[]) {
@@ -26,40 +26,40 @@ export class WorkflowExecutorParallel<TInput, TOutput, TResult> extends Workflow
         this._factories = [...factories];
     }
 
-    public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowExecutorParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult> {
+    public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult> {
         if (!(factories instanceof Array)) throw Error("Steps must be an array");
 
-        return this.next(new WorkflowExecutorParallel(factories));
+        return this.next(new WorkflowParallelBuilder(factories));
     }
     
-    public timeout(func: () => number): IWorkflowExecutorParallel<TInput, TOutput, TResult> {        
+    public timeout(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult> {        
         this._timeout = func;
         
         return this;
     }
 
-    public if<TNext>(func: (output: TOutput) => boolean): IWorkflowExecutorCondition<TOutput, TNext, TResult> {
+    public if<TNext>(func: (output: TOutput) => boolean): IWorkflowConditionBuilder<TOutput, TNext, TResult> {
         if (func == null) throw new Error("Conditional function cannot be null");
         
-        return this.next(new WorkflowExecutorCondition<TOutput, TNext, TResult>(func));
+        return this.next(new WorkflowConditionBuilder<TOutput, TNext, TResult>(func));
     }
 
-    public delay(func: () => number): IWorkflowExecutorParallel<TInput, TOutput, TResult> {
+    public delay(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult> {
         this._delay = func;
         
         return this;
     }
 
-    public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult> {
+    public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtBuilder<TOutput, TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
-        return this.next(new WorkflowExecutor(factory));
+        return this.next(new WorkflowNextBuilder(factory));
     }
 
-    public endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult> {
+    public endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
-        return this.next(new WorkflowExecutorEnd(factory));
+        return this.next(new WorkflowFinalBuilder(factory));
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {

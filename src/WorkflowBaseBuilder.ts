@@ -1,17 +1,17 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 
-export abstract class WorkflowExecutorBase<TInput, TOutput, TResult> {
+export abstract class WorkflowBaseBuilder<TInput, TOutput, TResult> {
     protected _delay: () => number;
     protected _timeout: () => number;
-    protected _next: WorkflowExecutorBase<any, any, TResult>;
+    protected _next: WorkflowBaseBuilder<any, any, TResult>;
 
-    protected next<T extends WorkflowExecutorBase<TOutput, any, TResult>>(builder: T) {
+    protected next<T extends WorkflowBaseBuilder<TOutput, any, TResult>>(builder: T) {
         this._next = builder;
 
         return builder;
     }
 
-    public getNext(): WorkflowExecutorBase<TOutput, any, TResult> {
+    public getNext(): WorkflowBaseBuilder<TOutput, any, TResult> {
         return this._next;
     }
 

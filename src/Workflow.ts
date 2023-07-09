@@ -1,6 +1,6 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
-import { IWorkflowExecutorEnd } from "./WorkflowExecutorEnd";
+import { IWorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 
 /**
  * Abstract class to setup a custom workflow. Setup the workflow in the build method through the IWorkflowBuilder dependency 
@@ -20,7 +20,7 @@ export abstract class Workflow<TInput = void, TResult = void> {
      * @param {IWorkflowBuilder<TResult>} builder the IWorkflowBuilder dependency to establish the workflow steps.
      */
     public abstract build(builder: IWorkflowBuilder<TInput, TResult>)
-        : IWorkflowExecutorEnd<any, TResult>;
+        : IWorkflowFinalBuilder<any, TResult>;
 
     /**
      * Runs the workflow and returns a Promise of type TResult.

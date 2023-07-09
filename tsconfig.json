@@ -9,10 +9,7 @@
       "noUncheckedIndexedAccess": true,
       "noEmit": true
     },
-    "files": [
-        "examples/Workflow1.ts",
-    ],
-    "include": ["./src/"],
+    "include": ["./src/", "index.ts"],
     "exclude": [
       "node_modules", 
       "**/__tests__/*",

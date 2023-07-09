@@ -13,7 +13,7 @@
     "test": "jest",
     "test:coverage": "npm test -- --coverage",
     "test:badges": "npm run test:coverage && jest-coverage-badges",
-    "build": "tsup src/ --format cjs,esm --dts",
+    "build": "tsup --format cjs,esm --dts",
     "lint": "tsc"
   },
   "repository": {

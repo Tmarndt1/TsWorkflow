@@ -1,18 +1,18 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
+import { WorkflowBaseBuilder } from "./WorkflowBaseBuilder";
 
-export interface IWorkflowExecutorEnd<TInput, TResult> {
+export interface IWorkflowFinalBuilder<TInput, TResult> {
     /**
      * Timeout for the entire workflow. If the timeout expires the workflow will be cancelled.
      * @param {number} milliseconds The number of milliseconds until the workflow expires.
      */
-    expire(func: () => number): IWorkflowExecutorEnd<TInput, TResult>;
+    expire(func: () => number): IWorkflowFinalBuilder<TInput, TResult>;
 
-    delay(func: () => number): IWorkflowExecutorEnd<TInput, TResult>;
+    delay(func: () => number): IWorkflowFinalBuilder<TInput, TResult>;
 }
 
-export class WorkflowExecutorEnd<TInput, TResult> extends WorkflowExecutorBase<TInput, TResult, TResult> implements IWorkflowExecutorEnd<TInput, TResult> {    
+export class WorkflowFinalBuilder<TInput, TResult> extends WorkflowBaseBuilder<TInput, TResult, TResult> implements IWorkflowFinalBuilder<TInput, TResult> {    
     private _expiration: () => number;
     private _factory: () => IWorkflowStep<TInput, TResult>;
 
@@ -22,13 +22,13 @@ export class WorkflowExecutorEnd<TInput, TResult> extends WorkflowExecutorBase<T
         this._factory = factory;
     }
 
-    public delay(func: () => number): IWorkflowExecutorEnd<TInput, TResult> {
+    public delay(func: () => number): IWorkflowFinalBuilder<TInput, TResult> {
         this._delay = func;
 
         return this;
     }
 
-    public expire(func: () => number): IWorkflowExecutorEnd<TInput, TResult> {
+    public expire(func: () => number): IWorkflowFinalBuilder<TInput, TResult> {
         this._expiration = func;
 
         return this;
