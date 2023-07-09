@@ -47,3 +47,16 @@ test('Workflow1-test5', async () => {
         expect(error).toEqual(`Step timed out after 1 ms`);
     }
 });
+
+
+test('Workflow1-test5', async () => {
+    const workflow1 = new Workflow1(0, 1);
+
+    try {
+        const output = await workflow1.run(-1);
+
+        expect(output).toBeNull();
+    } catch (error) {
+        expect(error).toEqual(`Workflow manually stopped`);
+    }
+});

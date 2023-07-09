@@ -9,20 +9,19 @@ export type ParallelType<T> = T extends () => WorkflowStep<unknown, infer TOutpu
 
 
 export interface IWorkflowNextBuilder<TInput, TOutput, TResult> {
-    then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtBuilder<TOutput, TNext, TResult>;
+    then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtendedBuilder<TOutput, TNext, TResult>;
     endWith(factory: () => WorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult>;
     parallel<T extends (() => WorkflowStep<any, any>)[] | []>(steps: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult>;
 }
 
-export interface IWorkflowNextExtBuilder<TInput, TOutput, TResult> extends IWorkflowNextBuilder<TInput, TOutput, TResult> {
+export interface IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> extends IWorkflowNextBuilder<TInput, TOutput, TResult> {
     if(func: (output: TOutput) => boolean): IWorkflowConditionBuilder<TOutput, TOutput, TResult>;
-    delay(func: () => number): IWorkflowNextExtBuilder<TInput, TOutput, TResult>;
-    timeout(func: () => number): IWorkflowNextExtBuilder<TInput, TOutput, TResult>;
-    // error(factory: () => WorkflowStep<Error, TResult>): IWorkflowExecutorExt<TOutput, TOutput, TResult>;
+    delay(func: () => number): IWorkflowNextExtendedBuilder<TInput, TOutput, TResult>;
+    timeout(func: () => number): IWorkflowNextExtendedBuilder<TInput, TOutput, TResult>;
 }
 
 export class WorkflowNextBuilder<TInput, TOutput, TResult> extends WorkflowBaseBuilder<TInput, TOutput, TResult> 
-    implements IWorkflowNextExtBuilder<TInput, TOutput, TResult> {
+    implements IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> {
     private _factory: () => IWorkflowStep<TInput, TOutput>;
 
     public constructor(factory: () => IWorkflowStep<TInput, TOutput>) {
@@ -37,7 +36,7 @@ export class WorkflowNextBuilder<TInput, TOutput, TResult> extends WorkflowBaseB
         return this.next(new WorkflowParallelBuilder(factories));
     }
 
-    public timeout(func: () => number): IWorkflowNextExtBuilder<TInput, TOutput, TResult> {        
+    public timeout(func: () => number): IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> {        
         this._timeout = func;
         
         return this;
@@ -51,13 +50,13 @@ export class WorkflowNextBuilder<TInput, TOutput, TResult> extends WorkflowBaseB
         return this._next as any as IWorkflowConditionBuilder<TOutput, TOutput, TResult>;
     }
 
-    public delay(func: () => number): IWorkflowNextExtBuilder<TInput, TOutput, TResult> {
+    public delay(func: () => number): IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> {
         this._delay = func;
         
         return this;
     }
 
-    public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtBuilder<TOutput, TNext, TResult> {
+    public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtendedBuilder<TOutput, TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
         return this.next(new WorkflowNextBuilder(factory));

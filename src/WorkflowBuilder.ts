@@ -1,6 +1,6 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { IWorkflowNextExtBuilder, WorkflowNextBuilder } from "./WorkflowNextBuilder";
+import { IWorkflowNextExtendedBuilder, WorkflowNextBuilder } from "./WorkflowNextBuilder";
 import { WorkflowBaseBuilder } from "./WorkflowBaseBuilder";
 import { WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 
@@ -8,16 +8,16 @@ export interface IWorkflowBuilder<TInput, TResult> {
     /**
      * Starts the workflow with the WorkflowStep dependency.
      * @param {WorkflowStep} factory The required WorfklowStep to start with.
-     * @returns {WorkflowNextBuilder<TInput, TOutput, TResult>} A new WorkflowExecutor instance to chain additional steps or conditions.
+     * @returns {WorkflowNextBuilder<TInput, TOutput, TResult>} A new Workflowbuilder instance to chain additional steps or conditions.
      */
-    startWith<TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtBuilder<TInput, TOutput, TResult>;
+    startWith<TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtendedBuilder<TInput, TOutput, TResult>;
 }
 
 /**
  * WorkflowBuilder class that allows for the chaining of various workflow steps and conditions. 
  */
 export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput, TResult> {
-    private _executor: WorkflowBaseBuilder<any, any, TResult> | null = null;
+    private _builder: WorkflowBaseBuilder<any, any, TResult> | null = null;
 
     public constructor() {
         
@@ -26,12 +26,12 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
     /**
      * Starts the workflow with the WorkflowStep dependency.
      * @param {WorkflowStep} factory The required WorfklowStep to start with.
-     * @returns {WorkflowNextBuilder<TInput, TOutput, TResult>} A new WorkflowExecutor instance to chain additional steps or conditions.
+     * @returns {WorkflowNextBuilder<TInput, TOutput, TResult>} A new Workflowbuilder instance to chain additional steps or conditions.
      */
-    public startWith<TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtBuilder<TInput, TOutput, TResult> {
-        this._executor = new WorkflowNextBuilder(factory);
+    public startWith<TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> {
+        this._builder = new WorkflowNextBuilder(factory);
 
-        return this._executor as any as IWorkflowNextExtBuilder<TInput, TOutput, TResult>;
+        return this._builder as any as IWorkflowNextExtendedBuilder<TInput, TOutput, TResult>;
     }
 
     /**
@@ -43,15 +43,15 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
         return new Promise(async (resolve, reject) => {
             let expiration: number = 0;
             let expired: boolean = false;
-            let executor: WorkflowBaseBuilder<any, any, TResult> = this._executor;
+            let builder: WorkflowBaseBuilder<any, any, TResult> = this._builder;
             let expirationTimeout: NodeJS.Timeout;
 
-            while (executor != null) {
-                executor = executor.getNext();
+            while (builder != null) {
+                builder = builder.getNext();
 
-                if (!(executor instanceof WorkflowFinalBuilder)) continue;
+                if (!(builder instanceof WorkflowFinalBuilder)) continue;
 
-                expiration = executor.expiration();
+                expiration = builder.expiration();
             }
 
             if (expiration > 0) {
@@ -65,7 +65,7 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
             }
 
             try {
-                let output: TResult = await this._executor?.run(input, cts);
+                let output: TResult = await this._builder?.run(input, cts);
 
                 clearInterval(expirationTimeout);
 

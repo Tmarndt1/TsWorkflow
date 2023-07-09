@@ -17,7 +17,7 @@ interface ICondition {
  */
 export interface IWorkflowAggregateBuilder<TInput, TOutput, TResult> {
     /**
-     * Aggregates the conditional results
+     * Aggregates the conditional branches
      */
     endIf(): IWorkflowNextBuilder<void, TOutput, TResult>;
 }
@@ -44,6 +44,10 @@ export interface IWorkflowElseBuilder<TInput, TOutput, TResult> {
      * @param {new () => IWorkflowStep<TInput, TNext>} factory the step to run
      */
     do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowDoBuilder<TInput, TOutput | TNext, TResult>;
+        /**
+     * If condition is true it will end the workflow
+     */
+    stop(): IWorkflowAggregateBuilder<TInput, TOutput, TResult>;
 }
 
 /**
@@ -71,7 +75,7 @@ export interface IWorkflowIfBuilder<TInput, TOutput, TResult> extends IWorkflowA
     else(): IWorkflowElseBuilder<TInput, TOutput, TResult>;
 }
 
-export interface IWorkflowRejectedBuilder<TInput, TOutput, TResult> {
+export interface IWorkflowStoppedBuilder<TInput, TOutput, TResult> {
     /**
      * Aggregates the conditional results
      */
@@ -92,9 +96,9 @@ export interface IWorkflowRejectedBuilder<TInput, TOutput, TResult> {
  */
 export interface IWorkflowConditionBuilder<TInput, TOutput, TResult> {
     /**
-     * If condition is true it will reject and end the workflow
+     * If condition is true it will end the workflow
      */
-    stop(): IWorkflowRejectedBuilder<TInput, TOutput, TResult>;
+    stop(): IWorkflowStoppedBuilder<TInput, TOutput, TResult>;
     /**
      * Defines the step to run if the condition is true
      * @param {new () => IWorkflowStep<TInput, TNext>} factory the step to run if the condition is true
@@ -103,16 +107,16 @@ export interface IWorkflowConditionBuilder<TInput, TOutput, TResult> {
 }
 
 /**
- * WorkflowExecutorCondition class provides the conditional capabilities
+ * WorkflowbuilderCondition class provides the conditional capabilities
  */
 export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends WorkflowBaseBuilder<TInput, TOutput, TResult> 
     implements IWorkflowConditionBuilder<TInput, TOutput, TResult>, IWorkflowIfBuilder<TInput, TOutput, TResult>,
         IWorkflowElseBuilder<TInput, TOutput, TResult>, IWorkflowDoBuilder<TInput, TOutput, TResult>,
-        IWorkflowRejectedBuilder<TInput, TOutput, TResult> {
+        IWorkflowStoppedBuilder<TInput, TOutput, TResult> {
             
     private _branches: ICondition[] = [];
 
-    get current(): ICondition {
+    get branch(): ICondition {
         return this._branches[this._branches.length - 1];
     }
 
@@ -128,20 +132,20 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
         });
     }
 
-    public stop(): IWorkflowRejectedBuilder<TInput, TOutput, TResult> {
-        this.current.stop = true;
+    public stop(): IWorkflowStoppedBuilder<TInput, TOutput, TResult> {
+        this.branch.stop = true;
 
         return this;
     }
     
     public timeout(func: () => number): any {
-        this.current.timeout = func;
+        this.branch.timeout = func;
 
         return this;
     }
     
     public delay(func: () => number): any {
-        this.current.delay = func;
+        this.branch.delay = func;
 
         return this;
     }
@@ -149,7 +153,7 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
     public do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowIfBuilder<TInput, TOutput | TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
-        this.current.factory = factory;
+        this.branch.factory = factory;
 
         return this;
     }
@@ -189,7 +193,7 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
             let branch = this._branches.find(x => x?.condition?.(input) === true);
 
             try {
-                if (branch.stop) reject("Workflow manually rejected");
+                if (branch.stop) reject("Workflow manually stopped");
 
                 let delay: number | null = branch?.delay?.() ?? 0;
                 let timeout: number = branch?.timeout?.() ?? 0;

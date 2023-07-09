@@ -1,6 +1,6 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { IWorkflowNextExtBuilder, IWorkflowNextBuilder, ParallelType, WorkflowNextBuilder } from "./WorkflowNextBuilder";
+import { IWorkflowNextExtendedBuilder, IWorkflowNextBuilder, ParallelType, WorkflowNextBuilder } from "./WorkflowNextBuilder";
 import { WorkflowBaseBuilder } from "./WorkflowBaseBuilder";
 import { IWorkflowFinalBuilder, WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 import { IWorkflowParallelBuilder, WorkflowParallelBuilder } from "./WorkflowParallelBuilder";
@@ -13,7 +13,7 @@ export class WorkflowMoveNextBuilder<TInput, TOutput, TResult> extends WorkflowB
         return this.next(new WorkflowParallelBuilder(factories));
     }
 
-    public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtBuilder<TOutput, TNext, TResult> {
+    public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtendedBuilder<TOutput, TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
         
         return this.next(new WorkflowNextBuilder(factory));

@@ -62,8 +62,7 @@ export class Workflow1 extends Workflow<number, string> {
                     .do(() => new Retirement())
                         .timeout(() => this._timeout)
                 .else()
-                    .do(() => new UnknownAge())
-                        .timeout(() => this._timeout)
+                    .stop()
                 .endIf()
                     .parallel([
                         () => ({
