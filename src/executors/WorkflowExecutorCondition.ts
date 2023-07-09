@@ -4,16 +4,9 @@ import { IWorkflowExecutor } from "./WorkflowExecutor";
 import { WorkflowExecutorMoveNext } from "./WorkflowExecutorMoveNext";
 import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
 
-enum ConditionType {
-    If,
-    ElseIf,
-    Else
-}
-
 interface ICondition {
     delay: number;
     timeout: number;
-    type: ConditionType;
     factory: () => IWorkflowStep<unknown, unknown>;
     condition: ((args: any) => boolean);
     reject: boolean;
@@ -117,19 +110,18 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
         IWorkflowExecutorConditionElse<TInput, TOutput, TResult>, IWorkflowExecutorConditionElseDo<TInput, TOutput, TResult>,
         IWorkflowExecutorConditionRejected<TInput, TOutput, TResult> {
             
-    private _maps: ICondition[] = [];
+    private _branches: ICondition[] = [];
 
-    get _current(): ICondition {
-        return this._maps[this._maps.length - 1];
+    get current(): ICondition {
+        return this._branches[this._branches.length - 1];
     }
 
     public constructor(condition: (input: TInput) => boolean) {
         super();
 
-        this._maps.push({
+        this._branches.push({
             delay: null,
             timeout: null,
-            type: ConditionType.If,
             condition: condition,
             factory: null,
             reject: false
@@ -137,19 +129,23 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
     }
 
     public reject(): IWorkflowExecutorConditionRejected<TInput, TOutput, TResult> {
-        this._current.reject = true;
+        this.current.reject = true;
 
         return this;
     }
     
     public timeout(milliseconds: number): any {
-        this._current.timeout = milliseconds;
+        if (milliseconds < 1) throw Error("Timeout must be a postive integer");
+
+        this.current.timeout = milliseconds;
 
         return this;
     }
     
     public delay(milliseconds: number): any {
-        this._current.delay = milliseconds;
+        if (milliseconds < 1) throw Error("Delay must be a postive integer");
+
+        this.current.delay = milliseconds;
 
         return this;
     }
@@ -157,7 +153,7 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
     public do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorConditionIf<TInput, TOutput | TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
-        this._current.factory = factory;
+        this.current.factory = factory;
 
         return this;
     }
@@ -166,14 +162,13 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
         return this.next(new WorkflowExecutorMoveNext())
     }
 
-    public elseIf(expression: (input: TInput) => boolean): IWorkflowExecutorCondition<TInput, TOutput, TResult> {
-        if (expression == null) throw new Error("Expression function cannot be null");
+    public elseIf(condition: (input: TInput) => boolean): IWorkflowExecutorCondition<TInput, TOutput, TResult> {
+        if (condition == null) throw new Error("Condition function cannot be null");
         
-        this._maps.push({
+        this._branches.push({
             delay: null,
             timeout: null,
-            type: ConditionType.ElseIf,
-            condition: expression,
+            condition: condition,
             factory: null,
             reject: false
         });
@@ -182,11 +177,10 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
     }
 
     public else(): IWorkflowExecutorConditionElse<TInput, TOutput, TResult> {        
-        this._maps.push({
+        this._branches.push({
             delay: null,
             timeout: null,
-            type: ConditionType.Else,
-            condition: null,
+            condition: () => true,
             factory: null,
             reject: false
         });
@@ -194,62 +188,54 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
         return this;
     }
 
-    public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
+    public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
         return new Promise(async (resolve, reject) => {
-            for (let i = 0; i < this._maps.length; i++) {
-                if (this._maps[i].type === ConditionType.Else || this._maps[i].condition?.(input)) {
-                    try {
-                        if (this._maps[i].reject) reject("Workflow manually rejected");
+            let branch = this._branches.find(x => x?.condition?.(input) === true);
 
-                        let timeoutMessage: string = `Step timed out after ${this._maps[i].timeout} ms`;
+            try {
+                if (branch.reject) reject("Workflow manually rejected");
 
-                        let delay: number | null = null;
-                        let hasTimeout: boolean = this._maps[i]?.timeout != null;
-                        let hasExpired: boolean = false;
-    
-                        if (hasTimeout) {
-                            setTimeout(async () => {
-                                hasExpired = true;
-    
-                                cts.cancel();
-    
-                                if (delay != null) clearTimeout(delay);
-    
-                                reject(timeoutMessage);
-                            }, this._maps[i].timeout ?? 0);
-                        }
+                let delay: number | null = branch?.delay ?? 0;
+                let timeout: number = branch?.timeout ?? 0;
+                let expired: boolean = false;
 
-                        if (this._maps[i].delay != null) {
-                            setTimeout(async () => {
-                                let result: TOutput = await this._maps[i].factory()?.run(input) as TOutput;
+                let delayTimeout: NodeJS.Timeout;
+                let expireTimeout: NodeJS.Timeout;
 
-                                if (hasExpired) return reject(timeoutMessage);
+                if (timeout > 0) {
+                    expireTimeout = setTimeout(async () => {
+                        expired = true;
 
-                                if (delay != null) clearTimeout(delay);
-                                
-                                let nextResult = await this.getNext()?.run(result, cts);
+                        cts.cancel();
 
-                                resolve(nextResult);       
-                            }, this._maps[i].delay ?? 0);
-                        } else {
-                            let result: TOutput = await this._maps[i].factory()?.run(input) as TOutput;
+                        if (delay != null) clearTimeout(delayTimeout);
 
-                            if (hasExpired) return reject(timeoutMessage);
-
-                            if (delay != null) clearTimeout(delay);
-                            
-                            let nextResult = await this.getNext()?.run(result, cts);
-
-                            resolve(nextResult); 
-                        }
-                        
-                    } catch (error) {
-                        return Promise.reject(error);
-                    }
+                        reject(`Step timed out after ${branch.timeout} ms`);
+                    }, branch.timeout ?? 0);
                 }
-            }
 
-            reject("There was an internal error");
+                delayTimeout = setTimeout(async () => {
+                    try {
+                        clearInterval(expireTimeout);
+
+                        if (expired) return reject(`Step timed out after ${branch.timeout} ms`);
+
+                        if (this.hasNext()) {
+                            resolve(
+                                await this.getNext()?.run(await branch.factory()?.run(input, cts.token) as TOutput, cts) as TResult
+                            )
+                        } else {
+                            resolve(
+                                await branch.factory()?.run(input, cts.token) as TResult
+                            )
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, delay);                
+            } catch (error) {
+                return Promise.reject(error);
+            }
         });
     }
 }

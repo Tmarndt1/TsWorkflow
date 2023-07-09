@@ -3,7 +3,7 @@ import { IWorkflowStep, WorkflowStep } from "../WorkflowStep";
 import { IWorkflowExecutorExt, WorkflowExecutor } from "./WorkflowExecutor";
 import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
 import { IWorkflowExecutorCondition, WorkflowExecutorCondition } from "./WorkflowExecutorCondition";
-import { IWorkflowExecutorEnd, WorkflowExecutorFinal } from "./WorkflowExecutorEnd";
+import { IWorkflowExecutorEnd, WorkflowExecutorEnd } from "./WorkflowExecutorEnd";
 
 type ReturnType<T> = T extends { new(): IWorkflowStep<unknown, infer TOutput> }
     ? TOutput : null;
@@ -61,71 +61,56 @@ export class WorkflowExecutorParallel<TInput, TOutput, TResult> extends Workflow
     public endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
-        return this.next(new WorkflowExecutorFinal(factory));
+        return this.next(new WorkflowExecutorEnd(factory));
     }
 
-    public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
-        let output: any = null;
-        let timeoutMessage: string = `Step timed out after ${this._timeout} ms`;
-
+    public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
         return new Promise((resolve, reject) => {
             if (cts?.token.isCancelled()) return reject("Workflow has been cancelled");
 
             try {
-                let timeout: NodeJS.Timeout | null = null;
-                let delay: NodeJS.Timeout | null = null;
-                let hasTimeout: boolean = this._timeout != null;
-                let hasExpired: boolean = false;
+                let timeout: number = this._timeout ?? 0;
+                let delay: number = this._delay ?? 0;
+                let expired: boolean = false;
 
-                if (hasTimeout) {
-                    timeout = setTimeout(async () => {
-                        hasExpired = true;
+                let delayTimeout: NodeJS.Timeout;
+                let expireTimeout: NodeJS.Timeout;
+
+                if (timeout > 0) {
+                    expireTimeout = setTimeout(async () => {
+                        expired = true;
 
                         cts.cancel();
 
-                        if (delay != null) clearTimeout(delay);
+                        clearTimeout(delayTimeout);
 
-                        reject(timeoutMessage);
+                        reject(`Step timed out after ${timeout} ms`);
                     }, this._timeout ?? 0);
                 }
     
-                delay = setTimeout(async () => {
-                    if (hasExpired) return reject(timeoutMessage);
+                delayTimeout = setTimeout(async () => {
+                    if (expired) return reject(`Step timed out after ${timeout} ms`);
+
+                    clearInterval(expireTimeout);
 
                     if (this.hasNext()) {
                         try {
-                            output = await Promise.all(this._factories.map(factory => factory().run(input)));
-                        } catch (error) {
-                            return reject(error);
-                        }
+                            let output: any[] = await Promise.all(this._factories.map(factory => factory().run(input, cts.token)));
 
-                        if (hasExpired) return reject(timeoutMessage);
-    
-                        if (timeout != null) clearTimeout(timeout);
-
-                        try {
-                            output = await this.getNext()?.run(output, cts);
+                            resolve(await this.getNext()?.run(output as any, cts));
                         } catch (error) {
                             reject(error);
                         }
-
-                        if (hasExpired) return reject(timeoutMessage);
-    
-                        resolve(output);
                     } else {
+                        if (expired) return reject(`Step timed out after ${timeout} ms`);
+
                         try {
-                            output = await Promise.all(this._factories.map(factory => factory().run(input)));
+                            resolve(await Promise.all(this._factories.map(factory => factory().run(input, cts.token))) as any);
                         } catch (error) {
                             reject(error);
                         }
-
-                        if (hasExpired) return reject(timeoutMessage);
-    
-                        if (timeout != null) clearTimeout(timeout);
-    
-                        resolve(output);
                     }
-                }, this._delay);
+                }, delay);
             } catch (error) {
                 reject(error);
             }

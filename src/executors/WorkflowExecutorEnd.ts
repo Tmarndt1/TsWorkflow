@@ -8,9 +8,11 @@ export interface IWorkflowExecutorEnd<TInput, TResult> {
      * @param {number} milliseconds The number of milliseconds until the workflow expires.
      */
     expire(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult>;
+
+    delay(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult>;
 }
 
-export class WorkflowExecutorFinal<TInput, TResult> extends WorkflowExecutorBase<TInput, TResult, TResult> implements IWorkflowExecutorEnd<TInput, TResult> {    
+export class WorkflowExecutorEnd<TInput, TResult> extends WorkflowExecutorBase<TInput, TResult, TResult> implements IWorkflowExecutorEnd<TInput, TResult> {    
     private _expiration: number;
     private _factory: () => IWorkflowStep<TInput, TResult>;
 
@@ -18,6 +20,14 @@ export class WorkflowExecutorFinal<TInput, TResult> extends WorkflowExecutorBase
         super();
 
         this._factory = factory;
+    }
+
+    public delay(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult> {
+        if (milliseconds < 1) throw Error("Delay must be a postive integer");
+
+        this._delay = milliseconds;
+
+        return this;
     }
 
     public expire(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult> {
@@ -38,7 +48,7 @@ export class WorkflowExecutorFinal<TInput, TResult> extends WorkflowExecutorBase
 
             setTimeout(async () => {
                 try {
-                    resolve(await this._factory().run(input));
+                    resolve(await this._factory().run(input, cts.token));
                 } catch (error) {
                     return reject(error);
                 }

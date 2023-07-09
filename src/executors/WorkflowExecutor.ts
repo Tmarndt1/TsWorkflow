@@ -2,7 +2,7 @@ import CancellationTokenSource from "../CancellationTokenSource";
 import { IWorkflowStep, WorkflowStep } from "../WorkflowStep";
 import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
 import { IWorkflowExecutorCondition, WorkflowExecutorCondition } from "./WorkflowExecutorCondition";
-import { IWorkflowExecutorEnd, WorkflowExecutorFinal } from "./WorkflowExecutorEnd";
+import { IWorkflowExecutorEnd, WorkflowExecutorEnd } from "./WorkflowExecutorEnd";
 import { IWorkflowExecutorParallel, WorkflowExecutorParallel } from "./WorkflowExecutorParallel";
 
 export type ParallelType<T> = T extends () => WorkflowStep<unknown, infer TOutput> ? TOutput : null;
@@ -74,52 +74,59 @@ export class WorkflowExecutor<TInput, TOutput, TResult> extends WorkflowExecutor
     public endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
-        return this.next(new WorkflowExecutorFinal(factory));
+        return this.next(new WorkflowExecutorEnd(factory));
     }
 
     public hasCatch(): boolean {
         return this._errorFactory != null;
     }
 
-    public async run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
+    public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
         if (cts?.token.isCancelled()) {
             throw new Error("Workflow has been cancelled");
         }
     
         try {
-            const output = await new Promise<TOutput>((resolve, reject) => {
+            return new Promise<TResult>((resolve, reject) => {
+                let expired: boolean = false;
                 const timeout = this._timeout ?? 0;
-                const delayTime = this._delay ?? 0;
-    
+                const delay = this._delay ?? 0;
+
+                let delayTimeout: NodeJS.Timeout;
+                let expireTimeout: NodeJS.Timeout;
+
                 if (timeout > 0) {
-                    setTimeout(() => {
+                    expireTimeout = setTimeout(() => {
+                        expired = true;
+                        
                         cts.cancel();
+
+                        if (delay != null) clearTimeout(delayTimeout);
+
                         reject(`Step timed out after ${timeout} ms`);
                     }, timeout);
                 }
     
-                setTimeout(async () => {
+                delayTimeout = setTimeout(async () => {
                     try {
-                        let result = await this._factory().run(input);
-            
+                        clearInterval(expireTimeout);
+                        
+                        if (expired) reject();
+
                         if (this.hasNext()) {
-                            result = await this.getNext()?.run(result, cts);
-                        }
-            
-                        resolve(result);
-                    } catch (error) {
-                        if (this.hasCatch()) {                        
-                            const output = await this._errorFactory?.().run(error);
-
-                            resolve(output);
+                            resolve(
+                                await this.getNext()?.run(await this._factory().run(input), cts) as TResult
+                            )
                         } else {
-                            reject(error);
+                            resolve(
+                                await this._factory().run(input, cts.token) as TResult
+                            )
                         }
+                    } catch (error) {
+                        reject(error);
                     }
-                }, delayTime);
+                }, delay);
             });
-
-            return output;
         } catch (error) {
             throw error;
         }

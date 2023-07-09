@@ -2,7 +2,7 @@ import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep, WorkflowStep } from "./WorkflowStep";
 import { IWorkflowExecutorExt, WorkflowExecutor } from "./executors/WorkflowExecutor";
 import { WorkflowExecutorBase } from "./executors/WorkflowExecutorBase";
-import { WorkflowExecutorFinal } from "./executors/WorkflowExecutorEnd";
+import { WorkflowExecutorEnd } from "./executors/WorkflowExecutorEnd";
 
 export interface IWorkflowBuilder<TResult> {
     /**
@@ -41,19 +41,17 @@ export class WorkflowBuilder<TResult> implements IWorkflowBuilder<TResult> {
      */
     public run(cts: CancellationTokenSource): Promise<TResult> {
         return new Promise(async (resolve, reject) => {
-            let step = this._executor;
+            let executor = this._executor;
 
-            while (step?.hasNext()) {
-                step = step.getNext();
+            while (executor?.hasNext()) {
+                executor = executor.getNext();
             }
 
             let expiration: number | null = 0;
     
-            if (step instanceof WorkflowExecutorFinal) {
-                expiration = step.getExpiration();
-            }
+            if (executor instanceof WorkflowExecutorEnd) expiration = executor.getExpiration();
     
-            if (expiration != null && expiration > 0) {
+            if (expiration > 0) {
                 setTimeout(() => {
                     cts?.cancel();
 

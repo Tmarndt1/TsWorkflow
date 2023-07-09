@@ -3,7 +3,7 @@ import { IWorkflowStep, WorkflowStep } from "../WorkflowStep";
 import { IWorkflowExecutorExt, IWorkflowExecutor, ParallelType, WorkflowExecutor } from "./WorkflowExecutor";
 import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
 import { IWorkflowExecutorCondition, WorkflowExecutorCondition } from "./WorkflowExecutorCondition";
-import { IWorkflowExecutorEnd, WorkflowExecutorFinal } from "./WorkflowExecutorEnd";
+import { IWorkflowExecutorEnd, WorkflowExecutorEnd } from "./WorkflowExecutorEnd";
 import { IWorkflowExecutorParallel, WorkflowExecutorParallel } from "./WorkflowExecutorParallel";
 
 
@@ -29,11 +29,11 @@ export class WorkflowExecutorMoveNext<TInput, TOutput, TResult> extends Workflow
     public endWith(builder: () => IWorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult> {
         if (builder == null) throw new Error("Factory cannot be null");
         
-        return this.next(new WorkflowExecutorFinal(builder));
+        return this.next(new WorkflowExecutorEnd(builder));
 
     }
 
-    public run(input: TInput, cts: CancellationTokenSource): Promise<TOutput> {
+    public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
         return this._next?.run(input as any, cts) ?? Promise.reject("Internal error in workflow");
     }
 }

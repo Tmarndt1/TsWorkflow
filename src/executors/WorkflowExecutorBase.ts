@@ -14,7 +14,7 @@ export abstract class WorkflowExecutorBase<TInput, TOutput, TResult> {
         return builder;
     }
 
-    public getNext(): WorkflowExecutorBase<any, any, TResult> {
+    public getNext(): WorkflowExecutorBase<TOutput, any, TResult> {
         return this._next;
     }
 
@@ -26,5 +26,5 @@ export abstract class WorkflowExecutorBase<TInput, TOutput, TResult> {
         return this.next != null;
     }
 
-    public abstract run(input: TInput, cts: CancellationTokenSource): Promise<TOutput>;
+    public abstract run(input: TInput, cts: CancellationTokenSource): Promise<TResult>;
 }

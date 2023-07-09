@@ -29,6 +29,7 @@ export class Workflow2 extends Workflow<string> {
     public build(builder: IWorkflowBuilder<string>) {
         return builder
             .startWith(() => new Step1())
+                .delay(10)
             .endWith(() => new Step2());
     }
 }
