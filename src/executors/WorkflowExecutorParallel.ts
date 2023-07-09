@@ -10,8 +10,8 @@ type ReturnType<T> = T extends { new(): IWorkflowStep<unknown, infer TOutput> }
 
 export interface IWorkflowExecutorParallel<TInput, TOutput, TResult> {
     if<TNext>(func: (output: TOutput) => boolean): IWorkflowExecutorCondition<TOutput, TNext, TResult>;
-    then<TNext>(factory: ((() => IWorkflowStep<TOutput, TNext>) | ((input: TOutput) => Promise<TNext>))): IWorkflowExecutorExt<TOutput, TNext, TResult>;
-    endWith(factory: ((() => IWorkflowStep<TOutput, TResult>) | ((input: TOutput) => Promise<TResult>))): IWorkflowExecutorEnd<TOutput, TResult>;
+    then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult>;
+    endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult>;
     delay(milliseconds: number): IWorkflowExecutorParallel<TInput, TOutput, TResult>;
     timeout(milliseconds: number): IWorkflowExecutorParallel<TInput, TOutput, TResult>;
     parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(steps: T): IWorkflowExecutorParallel<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult>;

@@ -43,7 +43,6 @@ export interface IWorkflowExecutorConditionElseDo<TInput, TOutput, TResult> exte
      * @param {number} milliseconds the time in milliseconds the step will timeout after
      */
     timeout(milliseconds: number): IWorkflowExecutorConditionElseDo<TInput, TOutput, TResult>;
-    
 }
 
 export interface IWorkflowExecutorConditionElse<TInput, TOutput, TResult> {

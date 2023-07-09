@@ -8,7 +8,6 @@ export interface IWorkflowExecutorEnd<TInput, TResult> {
      * @param {number} milliseconds The number of milliseconds until the workflow expires.
      */
     expire(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult>;
-    error(): IWorkflowExecutorEnd<TInput, void>;
 }
 
 export class WorkflowExecutorFinal<TInput, TResult> extends WorkflowExecutorBase<TInput, TResult, TResult> implements IWorkflowExecutorEnd<TInput, TResult> {    
@@ -21,10 +20,6 @@ export class WorkflowExecutorFinal<TInput, TResult> extends WorkflowExecutorBase
         this._factory = factory;
     }
 
-    public error(): IWorkflowExecutorEnd<TInput, void> {
-        return this;
-    }
-    
     public expire(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult> {
         if (milliseconds < 1) throw Error("Timeout must be a postive integer");
 

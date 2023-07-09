@@ -18,26 +18,26 @@ export interface IWorkflowExecutorExt<TInput, TOutput, TResult> extends IWorkflo
     if(func: (output: TOutput) => boolean): IWorkflowExecutorCondition<TOutput, TOutput, TResult>;
     delay(milliseconds: number): IWorkflowExecutorExt<TInput, TOutput, TResult>;
     timeout(milliseconds: number): IWorkflowExecutorExt<TInput, TOutput, TResult>;
-    error(factory: () => WorkflowStep<Error, TResult>): IWorkflowExecutorExt<TOutput, TOutput, TResult>;
+    // error(factory: () => WorkflowStep<Error, TResult>): IWorkflowExecutorExt<TOutput, TOutput, TResult>;
 }
 
 export class WorkflowExecutor<TInput, TOutput, TResult> extends WorkflowExecutorBase<TInput, TOutput, TResult> 
     implements IWorkflowExecutorExt<TInput, TOutput, TResult> {
-    private _factory: () => WorkflowStep<TInput, TOutput>;
-    private _errorFactory: () => WorkflowStep<Error, any>;
+    private _factory: () => IWorkflowStep<TInput, TOutput>;
+    private _errorFactory: () => IWorkflowStep<Error, any>;
 
-    public constructor(factory: () => WorkflowStep<TInput, TOutput>) {
+    public constructor(factory: () => IWorkflowStep<TInput, TOutput>) {
         super();
 
         this._factory = factory;
     }
-    public error(factory: () => WorkflowStep<Error, TResult>): IWorkflowExecutorExt<TOutput, TOutput, TResult> {
+    public error(factory: () => IWorkflowStep<Error, TResult>): IWorkflowExecutorExt<TOutput, TOutput, TResult> {
         this._errorFactory = factory;
 
         return this;
     }
 
-    public parallel<T extends (() => WorkflowStep<any, any>)[] | []>(factories: T): IWorkflowExecutorParallel<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
+    public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowExecutorParallel<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
         if (!(factories instanceof Array)) throw Error("Factories must be an array");
 
         return this.next(new WorkflowExecutorParallel(factories));
@@ -65,19 +65,19 @@ export class WorkflowExecutor<TInput, TOutput, TResult> extends WorkflowExecutor
         return this;
     }
 
-    public then<TNext>(factory: () => WorkflowStep<TOutput, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult> {
+    public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
         return this.next(new WorkflowExecutor(factory));
     }
 
-    public endWith(factory: () => WorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult> {
+    public endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
         return this.next(new WorkflowExecutorFinal(factory));
     }
 
-    public hasContinueWith(): boolean {
+    public hasCatch(): boolean {
         return this._errorFactory != null;
     }
 
@@ -108,7 +108,7 @@ export class WorkflowExecutor<TInput, TOutput, TResult> extends WorkflowExecutor
             
                         resolve(result);
                     } catch (error) {
-                        if (this.hasContinueWith()) {                        
+                        if (this.hasCatch()) {                        
                             const output = await this._errorFactory?.().run(error);
 
                             resolve(output);
