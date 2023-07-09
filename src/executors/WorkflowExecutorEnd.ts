@@ -1,31 +1,31 @@
-import CancellationTokenSource from "./CancellationTokenSource";
-import { WorkflowStep } from "./WorkflowStep";
-import { WorkflowStepBuilderBase } from "./WorkflowStepBuilderBase";
+import CancellationTokenSource from "../CancellationTokenSource";
+import { IWorkflowStep, WorkflowStep } from "../WorkflowStep";
+import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
 
-export interface IWorkflowStepBuilderEnd<TInput, TResult> {
+export interface IWorkflowExecutorEnd<TInput, TResult> {
     /**
      * Timeout for the entire workflow. If the timeout expires the workflow will be cancelled.
      * @param {number} milliseconds The number of milliseconds until the workflow expires.
      */
-    expire(milliseconds: number): IWorkflowStepBuilderEnd<TInput, TResult>;
-    onFailure(): IWorkflowStepBuilderEnd<TInput, void>;
+    expire(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult>;
+    error(): IWorkflowExecutorEnd<TInput, void>;
 }
 
-export class WorkflowStepBuilderFinal<TInput, TResult> extends WorkflowStepBuilderBase<TInput, TResult, TResult> implements IWorkflowStepBuilderEnd<TInput, TResult> {    
+export class WorkflowExecutorFinal<TInput, TResult> extends WorkflowExecutorBase<TInput, TResult, TResult> implements IWorkflowExecutorEnd<TInput, TResult> {    
     private _expiration: number | null = null;
-    private _factory: () => WorkflowStep<TInput, TResult>;
+    private _factory: () => IWorkflowStep<TInput, TResult>;
 
-    public constructor(factory: () => WorkflowStep<TInput, TResult>) {
+    public constructor(factory: () => IWorkflowStep<TInput, TResult>) {
         super();
 
         this._factory = factory;
     }
 
-    public onFailure(): IWorkflowStepBuilderEnd<TInput, void> {
+    public error(): IWorkflowExecutorEnd<TInput, void> {
         return this;
     }
     
-    public expire(milliseconds: number): IWorkflowStepBuilderEnd<TInput, TResult> {
+    public expire(milliseconds: number): IWorkflowExecutorEnd<TInput, TResult> {
         if (milliseconds < 1) throw Error("Timeout must be a postive integer");
 
         this._expiration = milliseconds;
@@ -48,7 +48,7 @@ export class WorkflowStepBuilderFinal<TInput, TResult> extends WorkflowStepBuild
                     return reject(error);
                 }
                 
-            }, this._delayTime);
+            }, this._delay);
         });
     }
 }

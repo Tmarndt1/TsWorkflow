@@ -3,10 +3,6 @@ import { IWorkflowBuilder } from "../src/WorkflowBuilder";
 import { WorkflowStep } from "../src/WorkflowStep";
 
 class Step1 extends WorkflowStep<void, string> {
-    public constructor() {
-        super();
-    }
-
     public run(): Promise<string> {
         return Promise.resolve("1");
     }
@@ -24,14 +20,6 @@ class Step3 extends WorkflowStep<string, string> {
     }
 }
 
-
-class Step4 extends WorkflowStep<string[], string[]> {
-    public run(input: string[]): Promise<string[]> {
-        return Promise.resolve(input);
-    }
-}
-
-
 /**
  * Simple age workflow example that increments an age and prints age in final step
  */
@@ -46,6 +34,10 @@ export class Workflow3 extends Workflow<string[]> {
                 () => new Step2(),
                 () => new Step3()
             ])
-            .endWith(() => new Step4());
+            .endWith(() => {
+                return {
+                    run: (input) => Promise.resolve(input)
+                }
+            })
     }
 }
