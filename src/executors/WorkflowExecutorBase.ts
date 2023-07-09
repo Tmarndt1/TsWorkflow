@@ -2,10 +2,7 @@ import CancellationTokenSource from "../CancellationTokenSource";
 
 export abstract class WorkflowExecutorBase<TInput, TOutput, TResult> {
     protected _delay: number = 0;
-    protected _retry: number = 0;
     protected _timeout: number | null = null;
-    protected _cts: CancellationTokenSource | null = null;
-
     protected _next: WorkflowExecutorBase<any, any, TResult>;
 
     protected next<T extends WorkflowExecutorBase<TOutput, any, TResult>>(builder: T) {
@@ -16,10 +13,6 @@ export abstract class WorkflowExecutorBase<TInput, TOutput, TResult> {
 
     public getNext(): WorkflowExecutorBase<TOutput, any, TResult> {
         return this._next;
-    }
-
-    public getTimeout(): number | null {
-        return this._timeout;
     }
 
     public hasNext(): boolean {
