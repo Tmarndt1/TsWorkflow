@@ -1,8 +1,7 @@
 import CancellationTokenSource from "../CancellationTokenSource";
-import { IWorkflowStep, WorkflowStep } from "../WorkflowStep";
+import { IWorkflowStep } from "../WorkflowStep";
 import { IWorkflowExecutorExt, IWorkflowExecutor, ParallelType, WorkflowExecutor } from "./WorkflowExecutor";
 import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
-import { IWorkflowExecutorCondition, WorkflowExecutorCondition } from "./WorkflowExecutorCondition";
 import { IWorkflowExecutorEnd, WorkflowExecutorEnd } from "./WorkflowExecutorEnd";
 import { IWorkflowExecutorParallel, WorkflowExecutorParallel } from "./WorkflowExecutorParallel";
 
@@ -12,12 +11,6 @@ export class WorkflowExecutorMoveNext<TInput, TOutput, TResult> extends Workflow
         if (!(factories instanceof Array)) throw Error("Steps must be an array");
 
         return this.next(new WorkflowExecutorParallel(factories));
-    }
-
-    public if(expression: (output: TOutput) => boolean): IWorkflowExecutorCondition<TOutput, TOutput, TResult> {
-        if (expression == null) throw new Error("Expression function cannot be null");
-        
-        return this.next(new WorkflowExecutorCondition<TOutput, TOutput, TResult>(expression));
     }
 
     public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult> {

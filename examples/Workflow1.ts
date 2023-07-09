@@ -38,9 +38,9 @@ class UnknownAge extends WorkflowStep<number, string> {
     }
 }
 
-class PrintAge extends WorkflowStep<string, string> {
-    public run(result: string): Promise<string> {
-        return Promise.resolve(result);
+class PrintAge extends WorkflowStep<string[], string> {
+    public run(result: string[]): Promise<string> {
+        return Promise.resolve(result[0]);
     }
 }
 
@@ -73,6 +73,13 @@ export class Workflow1 extends Workflow<string> {
                     .do(() => new UnknownAge())
                         .timeout(() => this._timeout)
                 .endIf()
+                    .parallel([
+                        () => {
+                            return {
+                                run: (input) => Promise.resolve(input)
+                            }
+                        }
+                    ])
             .endWith(() => new PrintAge())
             .expire(() => this._expiration);
     }

@@ -23,6 +23,18 @@ export class Workflow2 extends Workflow<string> {
         return builder
             .startWith(() => new Step1())
                 .timeout(() => 6000)
+            .if(() => true)
+                .do(() => {
+                    return {
+                        run: (input) => Promise.resolve(input)
+                    }
+                })
+            .endIf()
+            .then(() => {
+                return {
+                    run: (input) => Promise.resolve(input)
+                }
+            })
             .endWith(() => new Step2());
     }
 }

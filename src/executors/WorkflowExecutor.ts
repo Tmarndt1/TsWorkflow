@@ -31,11 +31,11 @@ export class WorkflowExecutor<TInput, TOutput, TResult> extends WorkflowExecutor
 
         this._factory = factory;
     }
-    public error(factory: () => IWorkflowStep<Error, TResult>): IWorkflowExecutorExt<TOutput, TOutput, TResult> {
-        this._errorFactory = factory;
+    // public error(factory: () => IWorkflowStep<Error, TResult>): IWorkflowExecutorExt<TOutput, TOutput, TResult> {
+    //     this._errorFactory = factory;
 
-        return this;
-    }
+    //     return this;
+    // }
 
     public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowExecutorParallel<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
         if (!(factories instanceof Array)) throw Error("Factories must be an array");
@@ -75,9 +75,9 @@ export class WorkflowExecutor<TInput, TOutput, TResult> extends WorkflowExecutor
         return this.next(new WorkflowExecutorEnd(factory));
     }
 
-    public hasCatch(): boolean {
-        return this._errorFactory != null;
-    }
+    // public hasCatch(): boolean {
+    //     return this._errorFactory != null;
+    // }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
         if (cts?.token.isCancelled()) {
