@@ -12,20 +12,57 @@ TsWorkflow is a lightweight and flexible TypeScript library for building and exe
 
 If you like or are using this project please give it a star. Thanks!
 
-<!-- ## Installing
+## Usage
+```typescript
+class Step1 extends WorkflowStep<void, string> {
+    public run(): Promise<string> {
+        return Promise.resolve("1");
+    }
+}
 
-Install the core npm package "ts-workflow"
+class Step2 extends WorkflowStep<string, string> {
+    public run(input: string, cts?: CancellationToken): Promise<string> {
+        return Promise.resolve(`${input},2`);
+    }
+}
+
+class Step3 extends WorkflowStep<string, string> {
+    public run(input: string, cts?: CancellationToken): Promise<string> {
+        return Promise.resolve(`${input},3`);
+    }
+}
+
+export class RandomWorkflow extends Workflow<string[]> {
+    public build(builder: IWorkflowBuilder<string[]>) {
+        return builder
+            // startWith API to define the first workflow step to run
+            .startWith(() => new Step1())
+            // parallel API to run multiple workflow steps at once and returns an array of results
+            .parallel([
+                () => new Step2(),
+                () => new Step3()
+            ])
+            // endWith API to define the last workflow step to run
+            .endWith(() => {
+                // A worklow step can either be a class or an object that has a run method
+                return {
+                    run: (input) => Promise.resolve(input)
+                }
+            })
+    }
+}
+
+const workflow = new RandomWorkflow();
+
+try {
+    const output: string[] = await workflow.run();
+
+    // Handle businesss logic
+} catch (error) {
+    console.log(error);
+}
 
 ```
-npm install ts-workflow
-```
- -->
-
-<!-- ### Guides
-
-* [Javascript (ES6)](es2017-guide.md)
-* [Typescript](typescript-guide.md)
- -->
 
 ## Authors
 
