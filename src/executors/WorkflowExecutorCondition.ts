@@ -43,7 +43,7 @@ export interface IWorkflowExecutorConditionElse<TInput, TOutput, TResult> {
      * Defines the step to run
      * @param {new () => IWorkflowStep<TInput, TNext>} factory the step to run
      */
-    do<TNext>(factory: ((() => IWorkflowStep<TOutput, TNext>) | ((input: TOutput) => Promise<TNext>))): IWorkflowExecutorConditionElseDo<TInput, TOutput | TNext, TResult>;
+    do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorConditionElseDo<TInput, TOutput | TNext, TResult>;
 }
 
 /**
@@ -99,7 +99,7 @@ export interface IWorkflowExecutorCondition<TInput, TOutput, TResult> {
      * Defines the step to run if the condition is true
      * @param {new () => IWorkflowStep<TInput, TNext>} factory the step to run if the condition is true
      */
-    do<TNext>(factory: ((() => IWorkflowStep<TOutput, TNext>) | ((input: TOutput) => Promise<TNext>))): IWorkflowExecutorConditionIf<TInput, TOutput | TNext, TResult>;
+    do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorConditionIf<TInput, TOutput | TNext, TResult>;
 }
 
 /**

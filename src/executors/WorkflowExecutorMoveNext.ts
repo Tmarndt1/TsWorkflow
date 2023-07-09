@@ -30,7 +30,6 @@ export class WorkflowExecutorMoveNext<TInput, TOutput, TResult> extends Workflow
         if (builder == null) throw new Error("Factory cannot be null");
         
         return this.next(new WorkflowExecutorEnd(builder));
-
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {

@@ -9,7 +9,7 @@ export type ParallelType<T> = T extends () => WorkflowStep<unknown, infer TOutpu
 
 
 export interface IWorkflowExecutor<TInput, TOutput, TResult> {
-    then<TNext>(factory: () => IWorkflowStep<unknown, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult>;
+    then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult>;
     endWith(factory: () => WorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult>;
     parallel<T extends (() => WorkflowStep<any, any>)[] | []>(steps: T): IWorkflowExecutorParallel<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult>;
 }

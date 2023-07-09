@@ -9,7 +9,7 @@ type ReturnType<T> = T extends { new(): IWorkflowStep<unknown, infer TOutput> }
     ? TOutput : null;
 
 export interface IWorkflowExecutorParallel<TInput, TOutput, TResult> {
-    if<TNext>(func: (output: TOutput) => boolean): IWorkflowExecutorCondition<TOutput, TNext, TResult>;
+    if(func: (output: TOutput) => boolean): IWorkflowExecutorCondition<TOutput, TOutput, TResult>;
     then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowExecutorExt<TOutput, TNext, TResult>;
     endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowExecutorEnd<TOutput, TResult>;
     delay(func: () => number): IWorkflowExecutorParallel<TInput, TOutput, TResult>;
