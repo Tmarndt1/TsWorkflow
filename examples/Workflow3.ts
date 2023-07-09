@@ -29,21 +29,15 @@ export class Workflow3 extends Workflow<void, string[]> {
                 () => new Step3()
             ]).delay(() => 500).timeout(() => 6000)
                 .if(x => x.length > 1)
-                    .do(() => {
-                        return {
-                            run: (input) => Promise.resolve(input)
-                        }
-                    })
+                    .do(() => ({
+                        run: (input) => Promise.resolve(input)
+                    }))
                 .endIf()
-            .then(() => {
-                return {
-                    run: (input) => Promise.resolve(input)
-                }
-            })
-            .endWith(() => {
-                return {
-                    run: (input) => Promise.resolve(input)
-                }
-            });
+            .then(() => ({
+                run: (input) => Promise.resolve(input)
+            }))
+            .endWith(() => ({
+                run: (input) => Promise.resolve(input)
+            }));
     }
 }

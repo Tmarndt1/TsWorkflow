@@ -67,11 +67,9 @@ export class Workflow1 extends Workflow<number, string> {
                         .timeout(() => this._timeout)
                 .endIf()
                     .parallel([
-                        () => {
-                            return {
-                                run: (input) => Promise.resolve(input)
-                            }
-                        }
+                        () => ({
+                            run: (input) => Promise.resolve(input)
+                        })
                     ])
             .endWith(() => new PrintAge())
             .expire(() => this._expiration);
