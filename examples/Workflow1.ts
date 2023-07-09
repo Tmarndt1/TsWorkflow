@@ -44,17 +44,12 @@ class PrintAge extends WorkflowStep<string, string> {
     }
 }
 
-/**
- * Simple age workflow example that increments an age and prints age in final step
- */
-export class Workflow1 extends Workflow<string> {
-    public id: string = "workflow-1"
-    public version: string = "1";
-    
+export class Workflow1 extends Workflow<string> {    
     private _age: number = 0;
 
     constructor(age: number) {
         super();
+
         this._age = age;
     }
 

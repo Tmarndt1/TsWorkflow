@@ -18,14 +18,7 @@ class Step2 extends WorkflowStep<void, string> {
     }
 }
 
-
-/**
- * Simple age workflow example that increments an age and prints age in final step
- */
 export class Workflow2 extends Workflow<string> {
-    public id: string = "workflow-1"
-    public version: string = "1";
-
     public build(builder: IWorkflowBuilder<string>) {
         return builder
             .startWith(() => new Step1())

@@ -7,8 +7,6 @@ import { IWorkflowExecutorEnd } from "./executors/WorkflowExecutorEnd";
  * by chaining various steps and conditions. Kick off the workflow by executing the run command on the Workflow instance.
  */
 export abstract class Workflow<TResult = void> {
-    public abstract id: string;
-    public abstract version: string;
     private _builder: WorkflowBuilder<TResult> | null = null;
 
     public constructor() {
