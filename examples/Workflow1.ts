@@ -2,15 +2,9 @@ import { Workflow } from "../src/Workflow";
 import { IWorkflowBuilder } from "../src/WorkflowBuilder";
 import { WorkflowStep } from "../src/WorkflowStep";
 
-class Birthday extends WorkflowStep<void, number> {
-    private _age: number = 0;
-    public constructor(age: number) {
-        super();
-        this._age = age;
-    }
-
-    public run(input: void): Promise<number> {
-        return Promise.resolve(this._age);
+class Birthday extends WorkflowStep<number, number> {
+    public run(input: number): Promise<number> {
+        return Promise.resolve(input);
     }
 }
 
@@ -44,22 +38,21 @@ class PrintAge extends WorkflowStep<string[], string> {
     }
 }
 
-export class Workflow1 extends Workflow<string> {    
+export class Workflow1 extends Workflow<number, string> {    
     private _age: number = 0;
     private _expiration: number = 0;
     private _timeout: number = 0;
 
-    constructor(age: number, expiration: number, timeout: number) {
+    constructor(expiration: number, timeout: number) {
         super();
 
-        this._age = age;
         this._expiration = expiration;
         this._timeout = timeout;
     }
 
-    public build(builder: IWorkflowBuilder<string>) {
+    public build(builder: IWorkflowBuilder<number, string>) {
         return builder
-            .startWith(() => new Birthday(this._age))
+            .startWith(() => new Birthday())
                 .if(x => x == 18)
                     .do(() => new Highschool())
                         .timeout(() => this._timeout)

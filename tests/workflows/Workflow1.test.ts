@@ -1,34 +1,34 @@
 import { Workflow1 } from "../../examples/Workflow1";
 
 test('Workflow1-test1', async () => {
-    const workflow1 = new Workflow1(18, 5000, 0);
+    const workflow1 = new Workflow1(5000, 0);
 
-    let result = await workflow1.run();
+    let result = await workflow1.run(18);
 
     expect(result).toEqual("Contgratulations on graduating Highschool!");
 });
 
 test('Workflow1-test2', async () => {
-    const workflow1 = new Workflow1(22, 5000, 0);
+    const workflow1 = new Workflow1(5000, 0);
 
-    let result = await workflow1.run();
+    let result = await workflow1.run(22);
 
     expect(result).toEqual("Contgratulations on graduating College!");
 });
 
 test('Workflow1-test3', async () => {
-    const workflow1 = new Workflow1(60, 5000, 0);
+    const workflow1 = new Workflow1(5000, 0);
 
-    let result = await workflow1.run();
+    let result = await workflow1.run(60);
 
     expect(result).toEqual("Contgratulations on retiring!");
 });
 
 test('Workflow1-test4', async () => {
-    const workflow1 = new Workflow1(60, 1, 0);
+    const workflow1 = new Workflow1(1, 0);
 
     try {
-        const output = await workflow1.run();
+        const output = await workflow1.run(60);
 
         expect(output).toBeNull();
     } catch (error) {
@@ -37,10 +37,10 @@ test('Workflow1-test4', async () => {
 });
 
 test('Workflow1-test5', async () => {
-    const workflow1 = new Workflow1(60, 0, 1);
+    const workflow1 = new Workflow1(0, 1);
 
     try {
-        const output = await workflow1.run();
+        const output = await workflow1.run(60);
 
         expect(output).toBeNull();
     } catch (error) {

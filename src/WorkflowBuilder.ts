@@ -4,19 +4,19 @@ import { IWorkflowExecutorExt, WorkflowExecutor } from "./executors/WorkflowExec
 import { WorkflowExecutorBase } from "./executors/WorkflowExecutorBase";
 import { WorkflowExecutorEnd } from "./executors/WorkflowExecutorEnd";
 
-export interface IWorkflowBuilder<TResult> {
+export interface IWorkflowBuilder<TInput, TResult> {
     /**
      * Starts the workflow with the WorkflowStep dependency.
      * @param {WorkflowStep} builder The required WorfklowStep to start with.
      * @returns {WorkflowExecutor<TInput, TOutput, TResult>} A new WorkflowExecutor instance to chain additional steps or conditions.
      */
-    startWith<TInput, TOutput>(builder: (() => IWorkflowStep<TInput, TOutput>) | ((input: TInput) => Promise<TOutput>)): IWorkflowExecutorExt<TInput, TOutput, TResult>;
+    startWith<TOutput>(builder: (() => IWorkflowStep<TInput, TOutput>) | ((input: TInput) => Promise<TOutput>)): IWorkflowExecutorExt<TInput, TOutput, TResult>;
 }
 
 /**
  * WorkflowBuilder class that allows for the chaining of various workflow steps and conditions. 
  */
-export class WorkflowBuilder<TResult> implements IWorkflowBuilder<TResult> {
+export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput, TResult> {
     private _executor: WorkflowExecutorBase<any, any, TResult> | null = null;
 
     public constructor() {
@@ -28,7 +28,7 @@ export class WorkflowBuilder<TResult> implements IWorkflowBuilder<TResult> {
      * @param {WorkflowStep} factory The required WorfklowStep to start with.
      * @returns {WorkflowExecutor<TInput, TOutput, TResult>} A new WorkflowExecutor instance to chain additional steps or conditions.
      */
-    public startWith<TInput, TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowExecutorExt<TInput, TOutput, TResult> {
+    public startWith<TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowExecutorExt<TInput, TOutput, TResult> {
         this._executor = new WorkflowExecutor(factory);
 
         return this._executor as any as IWorkflowExecutorExt<TInput, TOutput, TResult>;
@@ -39,7 +39,7 @@ export class WorkflowBuilder<TResult> implements IWorkflowBuilder<TResult> {
      * @param {CancellationTokenSource} cts The CancellationTokenSource to cancel the workflow.
      * @returns {Promise<TResult>} A Promise of type TResult.
      */
-    public run(cts: CancellationTokenSource): Promise<TResult> {
+    public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
         return new Promise(async (resolve, reject) => {
             let expiration: number = 0;
             let expired: boolean = false;
@@ -65,7 +65,7 @@ export class WorkflowBuilder<TResult> implements IWorkflowBuilder<TResult> {
             }
 
             try {
-                let output: TResult = await this._executor?.run(null, cts);
+                let output: TResult = await this._executor?.run(input, cts);
 
                 clearInterval(expirationTimeout);
 

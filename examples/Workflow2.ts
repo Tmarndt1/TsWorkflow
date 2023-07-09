@@ -18,8 +18,8 @@ class Step2 extends WorkflowStep<void, string> {
     }
 }
 
-export class Workflow2 extends Workflow<string> {
-    public build(builder: IWorkflowBuilder<string>) {
+export class Workflow2 extends Workflow<void, string> {
+    public build(builder: IWorkflowBuilder<void, string>) {
         return builder
             .startWith(() => new Step1())
                 .timeout(() => 6000)
