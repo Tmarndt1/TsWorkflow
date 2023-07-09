@@ -46,11 +46,15 @@ class PrintAge extends WorkflowStep<string, string> {
 
 export class Workflow1 extends Workflow<string> {    
     private _age: number = 0;
+    private _expiration: number = 0;
+    private _timeout: number = 0;
 
-    constructor(age: number) {
+    constructor(age: number, expiration: number, timeout: number) {
         super();
 
         this._age = age;
+        this._expiration = expiration;
+        this._timeout = timeout;
     }
 
     public build(builder: IWorkflowBuilder<string>) {
@@ -58,14 +62,18 @@ export class Workflow1 extends Workflow<string> {
             .startWith(() => new Birthday(this._age))
                 .if(x => x == 18)
                     .do(() => new Highschool())
+                        .timeout(() => this._timeout)
                 .elseIf(x => x == 22)
                     .do(() => new College())
+                        .timeout(() => this._timeout)
                 .elseIf(x => x == 60)
                     .do(() => new Retirement())
+                        .timeout(() => this._timeout)
                 .else()
                     .do(() => new UnknownAge())
+                        .timeout(() => this._timeout)
                 .endIf()
             .endWith(() => new PrintAge())
-            .expire(4500);
+            .expire(() => this._expiration);
     }
 }

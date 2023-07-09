@@ -27,7 +27,7 @@ export class Workflow3 extends Workflow<string[]> {
             .parallel([
                 () => new Step2(),
                 () => new Step3()
-            ]).delay(500)
+            ]).delay(() => 500)
             .endWith(() => {
                 return {
                     run: (input) => Promise.resolve(input)

@@ -22,7 +22,7 @@ export class Workflow2 extends Workflow<string> {
     public build(builder: IWorkflowBuilder<string>) {
         return builder
             .startWith(() => new Step1())
-                .timeout(6000)
+                .timeout(() => 6000)
             .endWith(() => new Step2());
     }
 }
