@@ -1,4 +1,4 @@
-import { Workflow3 } from "../examples/Workflow3";
+import { Workflow3 } from "../../examples/Workflow3";
 
 test('Workflow3-test1', async () => {
     const workflow = new Workflow3();
