@@ -1,5 +1,5 @@
-import CancellationTokenSource from "../CancellationTokenSource";
-import { IWorkflowStep, WorkflowStep } from "../WorkflowStep";
+import CancellationTokenSource from "./CancellationTokenSource";
+import { IWorkflowStep } from "./WorkflowStep";
 import { IWorkflowExecutor } from "./WorkflowExecutor";
 import { WorkflowExecutorMoveNext } from "./WorkflowExecutorMoveNext";
 import { WorkflowExecutorBase } from "./WorkflowExecutorBase";

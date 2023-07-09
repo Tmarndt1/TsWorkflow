@@ -2,15 +2,20 @@
     "compilerOptions": {
       "target": "es6",
       "module": "commonjs",
-      "outDir": "./dist",
-      "declaration": true,
+      "outDir": "dist",
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
       "strict": false,
-      "experimentalDecorators": true,
-      "sourceMap": true
+      "noUncheckedIndexedAccess": true,
+      "noEmit": true
     },
     "files": [
         "examples/Workflow1.ts",
     ],
-    "include": ["src"],
-    "exclude": ["node_modules", "**/__tests__/*"]
+    "include": ["./src/"],
+    "exclude": [
+      "node_modules", 
+      "**/__tests__/*",
+      "**/__examples__/*"
+    ]
   }

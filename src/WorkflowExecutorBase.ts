@@ -1,4 +1,4 @@
-import CancellationTokenSource from "../CancellationTokenSource";
+import CancellationTokenSource from "./CancellationTokenSource";
 
 export abstract class WorkflowExecutorBase<TInput, TOutput, TResult> {
     protected _delay: () => number;

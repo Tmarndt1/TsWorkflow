@@ -1,4 +1,4 @@
-import CancellationTokenSource, { CancellationToken } from "./CancellationTokenSource";
+import { CancellationToken } from "./CancellationTokenSource";
 
 /**
  * Abstract class or base class for the workflow steps. All derived WorkflowStep classes must implement the run method

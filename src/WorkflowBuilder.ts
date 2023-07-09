@@ -1,8 +1,8 @@
 import CancellationTokenSource from "./CancellationTokenSource";
-import { IWorkflowStep, WorkflowStep } from "./WorkflowStep";
-import { IWorkflowExecutorExt, WorkflowExecutor } from "./executors/WorkflowExecutor";
-import { WorkflowExecutorBase } from "./executors/WorkflowExecutorBase";
-import { WorkflowExecutorEnd } from "./executors/WorkflowExecutorEnd";
+import { IWorkflowStep } from "./WorkflowStep";
+import { IWorkflowExecutorExt, WorkflowExecutor } from "./WorkflowExecutor";
+import { WorkflowExecutorBase } from "./WorkflowExecutorBase";
+import { WorkflowExecutorEnd } from "./WorkflowExecutorEnd";
 
 export interface IWorkflowBuilder<TInput, TResult> {
     /**

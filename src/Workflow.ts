@@ -1,6 +1,6 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
-import { IWorkflowExecutorEnd } from "./executors/WorkflowExecutorEnd";
+import { IWorkflowExecutorEnd } from "./WorkflowExecutorEnd";
 
 /**
  * Abstract class to setup a custom workflow. Setup the workflow in the build method through the IWorkflowBuilder dependency 
