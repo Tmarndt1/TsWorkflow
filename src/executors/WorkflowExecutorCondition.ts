@@ -9,7 +9,7 @@ interface ICondition {
     timeout: number;
     factory: () => IWorkflowStep<unknown, unknown>;
     condition: ((args: any) => boolean);
-    reject: boolean;
+    stop: boolean;
 }
 
 /**
@@ -94,7 +94,7 @@ export interface IWorkflowExecutorCondition<TInput, TOutput, TResult> {
     /**
      * If condition is true it will reject and end the workflow
      */
-    reject(): IWorkflowExecutorConditionRejected<TInput, TOutput, TResult>;
+    stop(): IWorkflowExecutorConditionRejected<TInput, TOutput, TResult>;
     /**
      * Defines the step to run if the condition is true
      * @param {new () => IWorkflowStep<TInput, TNext>} factory the step to run if the condition is true
@@ -124,12 +124,12 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
             timeout: null,
             condition: condition,
             factory: null,
-            reject: false
+            stop: false
         });
     }
 
-    public reject(): IWorkflowExecutorConditionRejected<TInput, TOutput, TResult> {
-        this.current.reject = true;
+    public stop(): IWorkflowExecutorConditionRejected<TInput, TOutput, TResult> {
+        this.current.stop = true;
 
         return this;
     }
@@ -170,7 +170,7 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
             timeout: null,
             condition: condition,
             factory: null,
-            reject: false
+            stop: false
         });
 
         return this;
@@ -182,7 +182,7 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
             timeout: null,
             condition: () => true,
             factory: null,
-            reject: false
+            stop: false
         });
 
         return this;
@@ -193,7 +193,7 @@ export class WorkflowExecutorCondition<TInput, TOutput, TResult> extends Workflo
             let branch = this._branches.find(x => x?.condition?.(input) === true);
 
             try {
-                if (branch.reject) reject("Workflow manually rejected");
+                if (branch.stop) reject("Workflow manually rejected");
 
                 let delay: number | null = branch?.delay ?? 0;
                 let timeout: number = branch?.timeout ?? 0;

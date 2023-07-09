@@ -56,17 +56,16 @@ export class Workflow1 extends Workflow<string> {
     public build(builder: IWorkflowBuilder<string>) {
         return builder
             .startWith(() => new Birthday(this._age))
-            .if(x => x == 18)
-                .do(() => new Highschool())
-                .timeout(60000)
-            .elseIf(x => x == 22)
-                .do(() => new College())
-                .delay(10)
-            .elseIf(x => x == 60)
-                .do(() => new Retirement())
-            .else()
-                .do(() => new UnknownAge())
-            .endIf()
-            .endWith(() => new PrintAge());
+                .if(x => x == 18)
+                    .do(() => new Highschool())
+                .elseIf(x => x == 22)
+                    .do(() => new College())
+                .elseIf(x => x == 60)
+                    .do(() => new Retirement())
+                .else()
+                    .do(() => new UnknownAge())
+                .endIf()
+            .endWith(() => new PrintAge())
+            .expire(4500);
     }
 }
