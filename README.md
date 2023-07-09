@@ -43,6 +43,9 @@ export class RandomWorkflow extends Workflow<number, string[]> {
                 () => new Step3()
             ]).delay(() => 500) // Will delay the parallel step's execution 500 milliseconds
             // endWith API to define the last workflow step to run
+            .if(res => res.length < 2)
+                .stop() // Conditionally stop the workflow
+            .endIf()
             .endWith(() => ({
                 run: (input) => Promise.resolve(input) // A worklow step can either be a class or an object that has a run method
             }))
