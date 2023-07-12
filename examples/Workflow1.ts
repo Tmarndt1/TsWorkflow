@@ -69,7 +69,7 @@ export class Workflow1 extends Workflow<number, string> {
                             run: (input) => Promise.resolve(input)
                         })
                     ])
-            .endWith(() => new PrintAge())
-            .expire(() => this._expiration);
+                .endWith(() => new PrintAge())
+                .expire(() => this._expiration);
     }
 }

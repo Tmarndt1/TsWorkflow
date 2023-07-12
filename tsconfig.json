@@ -2,14 +2,15 @@
     "compilerOptions": {
       "target": "es6",
       "module": "commonjs",
-      "outDir": "dist",
+      "outDir": "./dist",
+      "declaration": true,
       "esModuleInterop": true,
       "forceConsistentCasingInFileNames": true,
       "strict": false,
       "noUncheckedIndexedAccess": true,
       "noEmit": true
     },
-    "include": ["./src/", "index.ts"],
+    "include": ["./src"],
     "exclude": [
       "node_modules", 
       "**/__tests__/*",

@@ -1,8 +1,8 @@
 {
-  "name": "tsworkflow",
+  "name": "ts-workflow",
   "license": "MIT",
   "version": "1.0.0",
-  "description": "A Workflow library for Typscript applications",
+  "description": "A fluent workflow library for Typescript/JavaScript applications",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
