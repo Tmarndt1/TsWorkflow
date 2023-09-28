@@ -1,8 +1,9 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
 import { IWorkflowNextExtendedBuilder, WorkflowNextBuilder } from "./WorkflowNextBuilder";
-import { WorkflowBaseBuilder } from "./WorkflowBaseBuilder";
+import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
+import { Workflow } from "./Workflow";
 
 export interface IWorkflowBuilder<TInput, TResult> {
     /**
@@ -17,10 +18,11 @@ export interface IWorkflowBuilder<TInput, TResult> {
  * WorkflowBuilder class that allows for the chaining of various workflow steps and conditions. 
  */
 export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput, TResult> {
-    private _builder: WorkflowBaseBuilder<any, any, TResult> | null = null;
+    private readonly _workflow: Workflow<TInput, TResult>;
+    private _builder: WorkflowStepBuilder<any, any, TResult> | null = null;
 
-    public constructor() {
-        
+    public constructor(workflow: Workflow<TInput, TResult>) {
+        this._workflow = workflow;
     }
     
     /**
@@ -29,7 +31,7 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
      * @returns {WorkflowNextBuilder<TInput, TOutput, TResult>} A new Workflowbuilder instance to chain additional steps or conditions.
      */
     public startWith<TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> {
-        this._builder = new WorkflowNextBuilder(factory);
+        this._builder = new WorkflowNextBuilder(factory, this._workflow);
 
         return this._builder as any as IWorkflowNextExtendedBuilder<TInput, TOutput, TResult>;
     }
@@ -43,7 +45,7 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
         return new Promise(async (resolve, reject) => {
             let expiration: number = 0;
             let expired: boolean = false;
-            let builder: WorkflowBaseBuilder<any, any, TResult> = this._builder;
+            let builder: WorkflowStepBuilder<any, any, TResult> = this._builder;
             let expirationTimeout: NodeJS.Timeout;
 
             while (builder != null) {
@@ -72,7 +74,7 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
                 if (expired) return;
                 
                 resolve(output);
-            } catch (error) {
+            } catch (error) {                
                 reject(error);
             }
         });

@@ -2,7 +2,8 @@ import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
 import { IWorkflowNextBuilder as IWorkflowNextBuilder } from "./WorkflowNextBuilder";
 import { WorkflowMoveNextBuilder } from "./WorkflowMoveNextBuilder";
-import { WorkflowBaseBuilder } from "./WorkflowBaseBuilder";
+import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
+import { Workflow } from "./Workflow";
 
 interface ICondition {
     delay: () => number;
@@ -109,7 +110,7 @@ export interface IWorkflowConditionBuilder<TInput, TOutput, TResult> {
 /**
  * WorkflowbuilderCondition class provides the conditional capabilities
  */
-export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends WorkflowBaseBuilder<TInput, TOutput, TResult> 
+export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends WorkflowStepBuilder<TInput, TOutput, TResult> 
     implements IWorkflowConditionBuilder<TInput, TOutput, TResult>, IWorkflowIfBuilder<TInput, TOutput, TResult>,
         IWorkflowElseBuilder<TInput, TOutput, TResult>, IWorkflowDoBuilder<TInput, TOutput, TResult>,
         IWorkflowStoppedBuilder<TInput, TOutput, TResult> {
@@ -120,8 +121,8 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
         return this._branches[this._branches.length - 1];
     }
 
-    public constructor(condition: (input: TInput) => boolean) {
-        super();
+    public constructor(condition: (input: TInput) => boolean, workflow: Workflow<any, TResult>) {
+        super(workflow);
 
         this._branches.push({
             delay: null,
@@ -149,7 +150,7 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
 
         return this;
     }
-    
+
     public do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowIfBuilder<TInput, TOutput | TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
@@ -159,7 +160,7 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
     }
 
     public endIf(): IWorkflowNextBuilder<void, TOutput, TResult> {
-        return this.next(new WorkflowMoveNextBuilder())
+        return this.next(new WorkflowMoveNextBuilder(this._workflow)) as any;
     }
 
     public elseIf(condition: (input: TInput) => boolean): IWorkflowConditionBuilder<TInput, TOutput, TResult> {

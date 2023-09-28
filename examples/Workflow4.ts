@@ -1,3 +1,4 @@
+import { WorkflowEvent } from "../src/Emitter";
 import { Workflow } from "../src/Workflow";
 import { IWorkflowBuilder } from "../src/WorkflowBuilder";
 import { WorkflowStep } from "../src/WorkflowStep";
@@ -12,13 +13,13 @@ class Step1 extends WorkflowStep<void, string> {
     }
 }
 
-class Step2 extends WorkflowStep<string, string> {
-    public run(input: string): Promise<string> {
-        return Promise.resolve("Step2 ran...");
+class Step2 extends WorkflowStep<[WorkflowEvent<number>, string], string> {
+    public run(input: [WorkflowEvent<number>, string]): Promise<string> {
+        return Promise.resolve(`Step 2 ran${input[0].data}`);
     }
 }
 
-export class Workflow2 extends Workflow<void, string> {
+export class Workflow4 extends Workflow<void, string> {
     public build(builder: IWorkflowBuilder<void, string>) {
         return builder
             .startWith(() => new Step1())
@@ -28,6 +29,7 @@ export class Workflow2 extends Workflow<void, string> {
                     run: (input) => Promise.resolve(input)
                 }))
             .endIf()
+            .wait<number>("eventName")
             .then(() => ({
                 run: (input) => Promise.resolve(input)
             }))

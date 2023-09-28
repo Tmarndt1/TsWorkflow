@@ -1,19 +1,19 @@
 {
-    "compilerOptions": {
-      "target": "es6",
-      "module": "commonjs",
-      "outDir": "./dist",
-      "declaration": true,
-      "esModuleInterop": true,
-      "forceConsistentCasingInFileNames": true,
-      "strict": false,
-      "noUncheckedIndexedAccess": true,
-      "noEmit": true
-    },
-    "include": ["./src"],
-    "exclude": [
-      "node_modules", 
-      "**/__tests__/*",
-      "**/__examples__/*"
-    ]
-  }
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "declaration": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": false,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true
+  },
+  "include": ["./src"],
+  "exclude": [
+    "node_modules", 
+    "**/__tests__/*",
+    "**/__examples__/*"
+  ]
+}

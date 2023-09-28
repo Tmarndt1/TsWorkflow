@@ -1,4 +1,3 @@
-import CancellationToken, { ICancellationToken } from '../../src/CancellationTokenSource';
 import CancellationTokenSource, { ICancellationTokenSource } from '../../src/CancellationTokenSource';
 
 describe('CancellationToken', () => {

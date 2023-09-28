@@ -1,9 +1,10 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
 import { IWorkflowNextExtendedBuilder, WorkflowNextBuilder } from "./WorkflowNextBuilder";
-import { WorkflowBaseBuilder } from "./WorkflowBaseBuilder";
+import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { IWorkflowConditionBuilder, WorkflowConditionBuilder } from "./WorkflowConditionBuilder";
 import { IWorkflowFinalBuilder, WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
+import { Workflow } from "./Workflow";
 
 type ReturnType<T> = T extends { new(): IWorkflowStep<unknown, infer TOutput> }
     ? TOutput : null;
@@ -17,11 +18,11 @@ export interface IWorkflowParallelBuilder<TInput, TOutput, TResult> {
     parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(steps: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult>;
 }
 
-export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowBaseBuilder<TInput, TOutput, TResult> implements IWorkflowParallelBuilder<TInput, TOutput, TResult> {
+export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowStepBuilder<TInput, TOutput, TResult> implements IWorkflowParallelBuilder<TInput, TOutput, TResult> {
     private _factories: (() => IWorkflowStep<any, any>)[];
 
-    public constructor(factories: (() => IWorkflowStep<any, any>)[]) {
-        super();
+    public constructor(factories: (() => IWorkflowStep<any, any>)[], workflow: Workflow<any, TResult>) {
+        super(workflow);
 
         this._factories = [...factories];
     }
@@ -29,7 +30,7 @@ export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowB
     public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult> {
         if (!(factories instanceof Array)) throw Error("Steps must be an array");
 
-        return this.next(new WorkflowParallelBuilder(factories));
+        return this.next(new WorkflowParallelBuilder(factories, this._workflow));
     }
     
     public timeout(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult> {        
@@ -41,7 +42,7 @@ export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowB
     public if<TNext>(func: (output: TOutput) => boolean): IWorkflowConditionBuilder<TOutput, TNext, TResult> {
         if (func == null) throw new Error("Conditional function cannot be null");
         
-        return this.next(new WorkflowConditionBuilder<TOutput, TNext, TResult>(func));
+        return this.next(new WorkflowConditionBuilder<TOutput, TNext, TResult>(func, this._workflow));
     }
 
     public delay(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult> {
@@ -53,13 +54,13 @@ export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowB
     public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtendedBuilder<TOutput, TNext, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
-        return this.next(new WorkflowNextBuilder(factory));
+        return this.next(new WorkflowNextBuilder(factory, this._workflow));
     }
 
     public endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult> {
         if (factory == null) throw new Error("Factory cannot be null");
 
-        return this.next(new WorkflowFinalBuilder(factory));
+        return this.next(new WorkflowFinalBuilder(factory, this._workflow));
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
@@ -100,8 +101,6 @@ export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowB
                             reject(error);
                         }
                     } else {
-                        if (expired) return reject(`Step timed out after ${timeout} ms`);
-
                         try {
                             resolve(await Promise.all(this._factories.map(factory => factory().run(input, cts.token))) as any);
                         } catch (error) {

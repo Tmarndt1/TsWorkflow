@@ -1,6 +1,7 @@
 import CancellationTokenSource from "./CancellationTokenSource";
+import { Workflow } from "./Workflow";
 import { IWorkflowStep } from "./WorkflowStep";
-import { WorkflowBaseBuilder } from "./WorkflowBaseBuilder";
+import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 
 export interface IWorkflowFinalBuilder<TInput, TResult> {
     /**
@@ -12,12 +13,12 @@ export interface IWorkflowFinalBuilder<TInput, TResult> {
     delay(func: () => number): IWorkflowFinalBuilder<TInput, TResult>;
 }
 
-export class WorkflowFinalBuilder<TInput, TResult> extends WorkflowBaseBuilder<TInput, TResult, TResult> implements IWorkflowFinalBuilder<TInput, TResult> {    
+export class WorkflowFinalBuilder<TInput, TResult> extends WorkflowStepBuilder<TInput, TResult, TResult> implements IWorkflowFinalBuilder<TInput, TResult> {    
     private _expiration: () => number;
     private _factory: () => IWorkflowStep<TInput, TResult>;
 
-    public constructor(factory: () => IWorkflowStep<TInput, TResult>) {
-        super();
+    public constructor(factory: () => IWorkflowStep<TInput, TResult>, workflow: Workflow<any, TResult>) {
+        super(workflow);
 
         this._factory = factory;
     }

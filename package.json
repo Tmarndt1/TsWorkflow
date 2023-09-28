@@ -14,7 +14,8 @@
     "test:coverage": "npm test -- --coverage",
     "test:badges": "npm run test:coverage && jest-coverage-badges",
     "build": "tsup --format cjs,esm --dts",
-    "lint": "tsc"
+    "lint": "tsc",
+    "debug": "node --inspect-brk ./node_modules/jest/bin/jest -i"
   },
   "repository": {
     "type": "git",
