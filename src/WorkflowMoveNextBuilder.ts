@@ -1,12 +1,9 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { IWorkflowNextExtendedBuilder, IWorkflowNextBuilder, ParallelType, WorkflowNextBuilder } from "./WorkflowNextBuilder";
+import { IWorkflowNextExtendedBuilder, IWorkflowNextBuilder, WorkflowNextBuilder, ParallelType } from "./WorkflowNextBuilder";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { IWorkflowFinalBuilder, WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 import { IWorkflowParallelBuilder, WorkflowParallelBuilder } from "./WorkflowParallelBuilder";
-import { WorkflowEventBuilder } from "./WorkflowEventBuilder";
-import { WorkflowEvent } from "./Emitter";
-
 
 export class WorkflowMoveNextBuilder<TInput, TOutput, TResult> extends WorkflowStepBuilder<TInput, TOutput, TResult> implements IWorkflowNextBuilder<TInput, TOutput, TResult> {
     public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
@@ -25,10 +22,6 @@ export class WorkflowMoveNextBuilder<TInput, TOutput, TResult> extends WorkflowS
         if (builder == null) throw new Error("Factory cannot be null");
         
         return this.next(new WorkflowFinalBuilder(builder, this._workflow));
-    }
-
-    public wait<TNext>(eventName: string): IWorkflowNextBuilder<TInput, [WorkflowEvent<TNext>, TOutput], TResult> {
-        return this.next(new WorkflowEventBuilder(eventName, this._workflow));
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {

@@ -4,17 +4,15 @@ import { WorkflowStepBuilder as WorkflowStepBuilder } from "./WorkflowStepBuilde
 import { IWorkflowConditionBuilder, WorkflowConditionBuilder } from "./WorkflowConditionBuilder";
 import { IWorkflowFinalBuilder, WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 import { IWorkflowParallelBuilder, WorkflowParallelBuilder } from "./WorkflowParallelBuilder";
-import { WorkflowEventBuilder } from "./WorkflowEventBuilder";
-import { WorkflowEvent } from "./Emitter";
 import { Workflow } from "./Workflow";
+import { WorkflowError } from "./WorkfowError";
 
 export type ParallelType<T> = T extends () => WorkflowStep<unknown, infer TOutput> ? TOutput : null;
 
 export interface IWorkflowNextBuilder<TInput, TOutput, TResult> {
     then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtendedBuilder<TOutput, TNext, TResult>;
-    endWith(factory: () => WorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult>;
-    parallel<T extends (() => WorkflowStep<any, any>)[] | []>(steps: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult>;
-    wait<TNext>(eventName: string): IWorkflowNextBuilder<TInput, [WorkflowEvent<TNext>, TOutput], TResult>
+    endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult>;
+    parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(steps: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult>;
 }
 
 export interface IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> extends IWorkflowNextBuilder<TInput, TOutput, TResult> {
@@ -33,10 +31,6 @@ export class WorkflowNextBuilder<TInput, TOutput, TResult> extends WorkflowStepB
         this._factory = factory;
     }
 
-    public wait<TNext>(eventName: string): IWorkflowNextBuilder<TInput, [WorkflowEvent<TNext>, TOutput], TResult> {
-        return this.next(new WorkflowEventBuilder(eventName, this._workflow));    
-    }
-    
     public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
         if (!(factories instanceof Array)) throw Error("Factories must be an array");
 
@@ -97,7 +91,7 @@ export class WorkflowNextBuilder<TInput, TOutput, TResult> extends WorkflowStepB
 
                         if (delay != null) clearTimeout(delayTimeout);
 
-                        reject(`Step timed out after ${timeout} ms`);
+                        reject(WorkflowError.timedOut(timeout));
                     }, timeout);
                 }
     

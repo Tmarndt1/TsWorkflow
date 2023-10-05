@@ -1,6 +1,7 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
 import { IWorkflowFinalBuilder } from "./WorkflowFinalBuilder";
+import { WorkflowError } from "./WorkfowError";
 
 export interface IWorkflow<TInput, TOutput> {
     run(input: TInput, cts?: CancellationTokenSource): Promise<TOutput>;
@@ -23,6 +24,10 @@ export enum WorkflowStatus {
      * Running status indicates the Workflow is currently running and has not completed/faulted.
      */
     Running,
+    /**
+     * Stopped status indicates the Workflow has been stopped.
+     */
+    Stopped,
     /**
      * Waiting status indidcates the Workflow is waiting for an event to occur.
      */
@@ -79,7 +84,11 @@ export abstract class Workflow<TInput, TResult> implements IWorkflow<TInput, TRe
                 resolve(res);
             })
             .catch(err => {
-                this._status = WorkflowStatus.Faulted;
+                if (err === WorkflowError.stopped()) {
+                    this._status = WorkflowStatus.Stopped;
+                } else {
+                    this._status = WorkflowStatus.Faulted;
+                }
 
                 reject(err);
             });

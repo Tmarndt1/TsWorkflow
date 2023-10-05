@@ -4,6 +4,7 @@ import { IWorkflowNextBuilder as IWorkflowNextBuilder } from "./WorkflowNextBuil
 import { WorkflowMoveNextBuilder } from "./WorkflowMoveNextBuilder";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { Workflow } from "./Workflow";
+import { WorkflowError } from "./WorkfowError";
 
 interface ICondition {
     delay: () => number;
@@ -194,7 +195,9 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
             let branch = this._branches.find(x => x?.condition?.(input) === true);
 
             try {
-                if (branch.stop) reject("Workflow manually stopped");
+                if (branch.stop) {
+                    return reject(WorkflowError.stopped());
+                }
 
                 let delay: number | null = branch?.delay?.() ?? 0;
                 let timeout: number = branch?.timeout?.() ?? 0;
@@ -211,7 +214,7 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
 
                         if (delay != null) clearTimeout(delayTimeout);
 
-                        reject(`Step timed out after ${timeout} ms`);
+                        reject(WorkflowError.timedOut(timeout));
                     }, timeout);
                 }
 
@@ -219,7 +222,7 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
                     try {
                         clearInterval(expireTimeout);
 
-                        if (expired) return reject(`Step timed out after ${timeout} ms`);
+                        if (expired) return reject(WorkflowError.timedOut(timeout));
 
                         if (this.hasNext()) {
                             resolve(

@@ -2,6 +2,7 @@ import CancellationTokenSource from "./CancellationTokenSource";
 import { Workflow } from "./Workflow";
 import { IWorkflowStep } from "./WorkflowStep";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
+import { WorkflowError } from "./WorkfowError";
 
 export interface IWorkflowFinalBuilder<TInput, TResult> {
     /**
@@ -41,7 +42,7 @@ export class WorkflowFinalBuilder<TInput, TResult> extends WorkflowStepBuilder<T
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
         return new Promise((resolve, reject) => {
-            if (cts?.token.isCancelled()) return reject("Workflow has been cancelled");
+            if (cts?.token.isCancelled()) return reject(WorkflowError.cancelled());
 
             setTimeout(async () => {
                 try {

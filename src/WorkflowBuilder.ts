@@ -4,6 +4,7 @@ import { IWorkflowNextExtendedBuilder, WorkflowNextBuilder } from "./WorkflowNex
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 import { Workflow } from "./Workflow";
+import { WorkflowError } from "./WorkfowError";
 
 export interface IWorkflowBuilder<TInput, TResult> {
     /**
@@ -62,7 +63,7 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
 
                     cts?.cancel();
 
-                    reject(`Workflow expired after ${expiration} ms`);
+                    reject(WorkflowError.expired(expiration));
                 }, expiration);
             }
 

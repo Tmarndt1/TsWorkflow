@@ -9,5 +9,6 @@ export abstract class WorkflowStep<TInput, TOutput> implements IWorkflowStep<TIn
 }
 
 export interface IWorkflowStep<TInput, TOutput> {
+    [key: string]: any;
     run: (input: TInput, cts?: CancellationToken) => Promise<TOutput>;
 }

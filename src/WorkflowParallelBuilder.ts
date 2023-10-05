@@ -1,13 +1,14 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { IWorkflowNextExtendedBuilder, WorkflowNextBuilder } from "./WorkflowNextBuilder";
+import { IWorkflowNextExtendedBuilder, ParallelType, WorkflowNextBuilder } from "./WorkflowNextBuilder";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { IWorkflowConditionBuilder, WorkflowConditionBuilder } from "./WorkflowConditionBuilder";
 import { IWorkflowFinalBuilder, WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 import { Workflow } from "./Workflow";
+import { WorkflowError } from "./WorkfowError";
 
-type ReturnType<T> = T extends { new(): IWorkflowStep<unknown, infer TOutput> }
-    ? TOutput : null;
+// type ReturnType<T> = T extends { new(): IWorkflowStep<unknown, infer TOutput> }
+//     ? TOutput : null;
 
 export interface IWorkflowParallelBuilder<TInput, TOutput, TResult> {
     if(func: (output: TOutput) => boolean): IWorkflowConditionBuilder<TOutput, TOutput, TResult>;
@@ -15,7 +16,7 @@ export interface IWorkflowParallelBuilder<TInput, TOutput, TResult> {
     endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult>;
     delay(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult>;
     timeout(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult>;
-    parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(steps: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult>;
+    parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(steps: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult>;
 }
 
 export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowStepBuilder<TInput, TOutput, TResult> implements IWorkflowParallelBuilder<TInput, TOutput, TResult> {
@@ -27,7 +28,7 @@ export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowS
         this._factories = [...factories];
     }
 
-    public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ReturnType<T[P]> }, TResult> {
+    public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
         if (!(factories instanceof Array)) throw Error("Steps must be an array");
 
         return this.next(new WorkflowParallelBuilder(factories, this._workflow));
@@ -65,7 +66,7 @@ export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowS
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
         return new Promise((resolve, reject) => {
-            if (cts?.token.isCancelled()) return reject("Workflow has been cancelled");
+            if (cts?.token.isCancelled()) return reject(WorkflowError.cancelled());
 
             try {
                 let timeout: number = this._timeout?.() ?? 0;
@@ -83,12 +84,12 @@ export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowS
 
                         clearTimeout(delayTimeout);
 
-                        reject(`Step timed out after ${timeout} ms`);
+                        reject(WorkflowError.timedOut(timeout));
                     }, timeout);
                 }
     
                 delayTimeout = setTimeout(async () => {
-                    if (expired) return reject(`Step timed out after ${timeout} ms`);
+                    if (expired) return reject(WorkflowError.timedOut(timeout));
 
                     clearInterval(expireTimeout);
 
