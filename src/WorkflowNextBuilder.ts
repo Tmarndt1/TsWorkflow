@@ -7,7 +7,7 @@ import { IWorkflowParallelBuilder, WorkflowParallelBuilder } from "./WorkflowPar
 import { Workflow } from "./Workflow";
 import { WorkflowError } from "./WorkfowError";
 
-export type ParallelType<T> = T extends () => WorkflowStep<unknown, infer TOutput> ? TOutput : null;
+export type ParallelType<T> = T extends () => WorkflowStep<unknown, infer TOutput> ? TOutput : unknown;
 
 export interface IWorkflowNextBuilder<TInput, TOutput, TResult> {
     then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtendedBuilder<TOutput, TNext, TResult>;

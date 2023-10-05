@@ -21,7 +21,7 @@ class Step3 extends WorkflowStep<string, string> {
 }
 
 export class Workflow3 extends Workflow<void, string[]> {
-    public build(builder: IWorkflowBuilder<void, string[]>) {
+    public build(builder: IWorkflowBuilder<void, string[]>) {        
         return builder
             .startWith(() => new Step1())
             .parallel([

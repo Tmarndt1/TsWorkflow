@@ -1,5 +1,6 @@
 import { Workflow1 } from "../../examples/Workflow1";
 import { WorkflowStatus } from "../../src/Workflow";
+import { WorkflowError } from "../../src/WorkfowError";
 
 test('Workflow1-test1', async () => {
     const workflow = new Workflow1(5000, 0);
@@ -36,7 +37,7 @@ test('Workflow1-test4', async () => {
 
         expect(output).toBeNull();
     } catch (error) {
-        expect(error).toEqual(`Workflow expired after 1 ms`);
+        expect(error).toEqual(WorkflowError.expired(1));
     }
 });
 
@@ -48,7 +49,7 @@ test('Workflow1-test5', async () => {
 
         expect(output).toBeNull();
     } catch (error) {
-        expect(error).toEqual(`Step timed out after 1 ms`);
+        expect(error).toEqual(WorkflowError.timedOut(1));
     }
 
     expect(workflow.status).toBe(WorkflowStatus.Faulted);
@@ -63,8 +64,8 @@ test('Workflow1-test5', async () => {
 
         expect(output).toBeNull();
     } catch (error) {
-        expect(error).toEqual(`Workflow manually stopped`);
+        expect(error).toEqual(WorkflowError.stopped());
     }
 
-    expect(workflow.status).toBe(WorkflowStatus.Faulted);
+    expect(workflow.status).toBe(WorkflowStatus.Stopped);
 });

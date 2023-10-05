@@ -1,22 +1,14 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { IWorkflowNextExtendedBuilder, ParallelType, WorkflowNextBuilder } from "./WorkflowNextBuilder";
+import { IWorkflowNextBuilder, IWorkflowNextExtendedBuilder, ParallelType, WorkflowNextBuilder } from "./WorkflowNextBuilder";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { IWorkflowConditionBuilder, WorkflowConditionBuilder } from "./WorkflowConditionBuilder";
 import { IWorkflowFinalBuilder, WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 import { Workflow } from "./Workflow";
 import { WorkflowError } from "./WorkfowError";
 
-// type ReturnType<T> = T extends { new(): IWorkflowStep<unknown, infer TOutput> }
-//     ? TOutput : null;
+export interface IWorkflowParallelBuilder<TInput, TOutput, TResult> extends IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> {
 
-export interface IWorkflowParallelBuilder<TInput, TOutput, TResult> {
-    if(func: (output: TOutput) => boolean): IWorkflowConditionBuilder<TOutput, TOutput, TResult>;
-    then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtendedBuilder<TOutput, TNext, TResult>;
-    endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult>;
-    delay(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult>;
-    timeout(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult>;
-    parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(steps: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult>;
 }
 
 export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowStepBuilder<TInput, TOutput, TResult> implements IWorkflowParallelBuilder<TInput, TOutput, TResult> {

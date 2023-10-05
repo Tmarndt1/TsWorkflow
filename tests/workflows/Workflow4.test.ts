@@ -1,5 +1,4 @@
 import { Workflow4 } from "../../examples/Workflow4";
-import { WorkflowEvent, emitWorkflowEvent } from "../../src/Emitter";
 import { WorkflowStatus } from "../../src/Workflow";
 
 test('Workflow4-test1', () => {
@@ -7,11 +6,7 @@ test('Workflow4-test1', () => {
 
     const promise = workflow.run();
 
-    setTimeout(() => {
-        emitWorkflowEvent(new WorkflowEvent("eventName", "!!"));
-    }, 500);
-
-    expect(promise).resolves.toBe("Step 2 ran!!");
+    expect(promise).resolves.toBe("Step 2 ran...");
 });
 
 test('Workflow4-test2', () => {
@@ -22,10 +17,6 @@ test('Workflow4-test2', () => {
     const promise = workflow.run();
 
     expect(workflow.status).toBe(WorkflowStatus.Running);
-
-    setTimeout(() => {
-        emitWorkflowEvent(new WorkflowEvent("fakeEvent", "??"));
-    }, 500);
 
     let result: string = "";
 
