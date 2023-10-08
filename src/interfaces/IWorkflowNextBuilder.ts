@@ -1,5 +1,5 @@
-import { ParallelType } from "../WorkflowNextBuilder";
 import { IWorkflowStep } from "../WorkflowStep";
+import { ParallelType } from "../types/ParallelType";
 import { IWorkflowFinalBuilder } from "./IWorkflowFinalBuilder";
 import { IWorkflowNextExtBuilder } from "./IWorkflowNextExtBuilder";
 import { IWorkflowParallelBuilder } from "./IWorkflowParallelBuilder";
