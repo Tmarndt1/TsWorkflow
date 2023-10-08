@@ -1,7 +1,7 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
-import { IWorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 import { WorkflowError } from "./WorkfowError";
+import { IWorkflowFinalBuilder } from "./interfaces/IWorkflowFinalBuilder";
 
 export interface IWorkflow<TInput, TOutput> {
     run(input: TInput, cts?: CancellationTokenSource): Promise<TOutput>;

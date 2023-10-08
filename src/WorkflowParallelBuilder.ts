@@ -1,15 +1,17 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { IWorkflowNextBuilder, IWorkflowNextExtendedBuilder, ParallelType, WorkflowNextBuilder } from "./WorkflowNextBuilder";
+import { WorkflowNextBuilder } from "./WorkflowNextBuilder";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
-import { IWorkflowConditionBuilder, WorkflowConditionBuilder } from "./WorkflowConditionBuilder";
-import { IWorkflowFinalBuilder, WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
+import { WorkflowConditionBuilder } from "./WorkflowConditionBuilder";
+import { WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 import { Workflow } from "./Workflow";
 import { WorkflowError } from "./WorkfowError";
-
-export interface IWorkflowParallelBuilder<TInput, TOutput, TResult> extends IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> {
-
-}
+import { IWorkflowConditionBuilder } from "./interfaces/IWorkflowConditionBuilder";
+import { IWorkflowFinalBuilder } from "./interfaces/IWorkflowFinalBuilder";
+import { IWorkflowNextExtBuilder } from "./interfaces/IWorkflowNextExtBuilder";
+import { IWorkflowParallelBuilder } from "./interfaces/IWorkflowParallelBuilder";
+import { ParallelType } from "./types/ParallelType";
+import { verifyNullOrThrow } from "./functions/verifyNullOrThrow";
 
 export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowStepBuilder<TInput, TOutput, TResult> implements IWorkflowParallelBuilder<TInput, TOutput, TResult> {
     private _factories: (() => IWorkflowStep<any, any>)[];
@@ -20,40 +22,44 @@ export class WorkflowParallelBuilder<TInput, TOutput, TResult> extends WorkflowS
         this._factories = [...factories];
     }
 
-    public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(factories: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
-        if (!(factories instanceof Array)) throw Error("Steps must be an array");
+    public parallel<T extends (() => IWorkflowStep<any, any>)[] | []>(funcs: T): IWorkflowParallelBuilder<TOutput, { -readonly [P in keyof T]: ParallelType<T[P]> }, TResult> {
+        if (!(funcs instanceof Array)) throw Error("Parameter must be of type Array");
 
-        return this.next(new WorkflowParallelBuilder(factories, this._workflow));
+        return this.next(new WorkflowParallelBuilder(funcs, this._workflow));
     }
     
-    public timeout(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult> {        
+    public timeout(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult> {
+        verifyNullOrThrow(func);
+    
         this._timeout = func;
         
         return this;
     }
 
     public if<TNext>(func: (output: TOutput) => boolean): IWorkflowConditionBuilder<TOutput, TNext, TResult> {
-        if (func == null) throw new Error("Conditional function cannot be null");
+        verifyNullOrThrow(func);
         
         return this.next(new WorkflowConditionBuilder<TOutput, TNext, TResult>(func, this._workflow));
     }
 
     public delay(func: () => number): IWorkflowParallelBuilder<TInput, TOutput, TResult> {
+        verifyNullOrThrow(func);
+
         this._delay = func;
         
         return this;
     }
 
-    public then<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtendedBuilder<TOutput, TNext, TResult> {
-        if (factory == null) throw new Error("Factory cannot be null");
+    public then<TNext>(func: () => IWorkflowStep<TOutput, TNext>): IWorkflowNextExtBuilder<TOutput, TNext, TResult> {
+        verifyNullOrThrow(func);
 
-        return this.next(new WorkflowNextBuilder(factory, this._workflow));
+        return this.next(new WorkflowNextBuilder(func, this._workflow));
     }
 
-    public endWith(factory: () => IWorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult> {
-        if (factory == null) throw new Error("Factory cannot be null");
+    public endWith(func: () => IWorkflowStep<TOutput, TResult>): IWorkflowFinalBuilder<TOutput, TResult> {
+        verifyNullOrThrow(func);
 
-        return this.next(new WorkflowFinalBuilder(factory, this._workflow));
+        return this.next(new WorkflowFinalBuilder(func, this._workflow));
     }
 
     public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {

@@ -3,34 +3,32 @@ import { Workflow } from "./Workflow";
 import { IWorkflowStep } from "./WorkflowStep";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowError } from "./WorkfowError";
-
-export interface IWorkflowFinalBuilder<TInput, TResult> {
-    /**
-     * Timeout for the entire workflow. If the timeout expires the workflow will be cancelled.
-     * @param {number} milliseconds The number of milliseconds until the workflow expires.
-     */
-    expire(func: () => number): IWorkflowFinalBuilder<TInput, TResult>;
-
-    delay(func: () => number): IWorkflowFinalBuilder<TInput, TResult>;
-}
+import { verifyNullOrThrow } from "./functions/verifyNullOrThrow";
+import { IWorkflowFinalBuilder } from "./interfaces/IWorkflowFinalBuilder";
 
 export class WorkflowFinalBuilder<TInput, TResult> extends WorkflowStepBuilder<TInput, TResult, TResult> implements IWorkflowFinalBuilder<TInput, TResult> {    
     private _expiration: () => number;
     private _factory: () => IWorkflowStep<TInput, TResult>;
 
-    public constructor(factory: () => IWorkflowStep<TInput, TResult>, workflow: Workflow<any, TResult>) {
+    public constructor(func: () => IWorkflowStep<TInput, TResult>, workflow: Workflow<any, TResult>) {
         super(workflow);
 
-        this._factory = factory;
+        verifyNullOrThrow(func);
+
+        this._factory = func;
     }
 
     public delay(func: () => number): IWorkflowFinalBuilder<TInput, TResult> {
+        verifyNullOrThrow(func);
+
         this._delay = func;
 
         return this;
     }
 
     public expire(func: () => number): IWorkflowFinalBuilder<TInput, TResult> {
+        verifyNullOrThrow(func);
+
         this._expiration = func;
 
         return this;

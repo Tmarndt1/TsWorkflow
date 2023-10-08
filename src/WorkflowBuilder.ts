@@ -1,10 +1,12 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { IWorkflowNextExtendedBuilder, WorkflowNextBuilder } from "./WorkflowNextBuilder";
+import { WorkflowNextBuilder } from "./WorkflowNextBuilder";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
 import { Workflow } from "./Workflow";
 import { WorkflowError } from "./WorkfowError";
+import { IWorkflowNextExtBuilder } from "./interfaces/IWorkflowNextExtBuilder";
+import { verifyNullOrThrow } from "./functions/verifyNullOrThrow";
 
 export interface IWorkflowBuilder<TInput, TResult> {
     /**
@@ -12,7 +14,7 @@ export interface IWorkflowBuilder<TInput, TResult> {
      * @param {WorkflowStep} factory The required WorfklowStep to start with.
      * @returns {WorkflowNextBuilder<TInput, TOutput, TResult>} A new Workflowbuilder instance to chain additional steps or conditions.
      */
-    startWith<TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtendedBuilder<TInput, TOutput, TResult>;
+    startWith<TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtBuilder<TInput, TOutput, TResult>;
 }
 
 /**
@@ -28,13 +30,15 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
     
     /**
      * Starts the workflow with the WorkflowStep dependency.
-     * @param {WorkflowStep} factory The required WorfklowStep to start with.
+     * @param {WorkflowStep} func The required WorfklowStep to start with.
      * @returns {WorkflowNextBuilder<TInput, TOutput, TResult>} A new Workflowbuilder instance to chain additional steps or conditions.
      */
-    public startWith<TOutput>(factory: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtendedBuilder<TInput, TOutput, TResult> {
-        this._builder = new WorkflowNextBuilder(factory, this._workflow);
+    public startWith<TOutput>(func: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtBuilder<TInput, TOutput, TResult> {
+        verifyNullOrThrow(func);
 
-        return this._builder as any as IWorkflowNextExtendedBuilder<TInput, TOutput, TResult>;
+        this._builder = new WorkflowNextBuilder(func, this._workflow);
+
+        return this._builder as any as IWorkflowNextExtBuilder<TInput, TOutput, TResult>;
     }
 
     /**

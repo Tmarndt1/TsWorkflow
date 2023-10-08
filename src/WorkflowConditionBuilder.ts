@@ -1,10 +1,16 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
-import { IWorkflowNextBuilder as IWorkflowNextBuilder } from "./WorkflowNextBuilder";
 import { WorkflowMoveNextBuilder } from "./WorkflowMoveNextBuilder";
 import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { Workflow } from "./Workflow";
 import { WorkflowError } from "./WorkfowError";
+import { IWorkflowConditionBuilder } from "./interfaces/IWorkflowConditionBuilder";
+import { IWorkflowDoBuilder } from "./interfaces/IWorkflowDoBuilder";
+import { IWorkflowElseBuilder } from "./interfaces/IWorkflowElseBuilder";
+import { IWorkflowIfBuilder } from "./interfaces/IWorkflowIfBuilder";
+import { IWorkflowNextBuilder } from "./interfaces/IWorkflowNextBuilder";
+import { IWorkflowStoppedBuilder } from "./interfaces/IWorkflowStoppedBuilder";
+import { verifyNullOrThrow } from "./functions/verifyNullOrThrow";
 
 interface ICondition {
     delay: () => number;
@@ -12,100 +18,6 @@ interface ICondition {
     factory: () => IWorkflowStep<unknown, unknown>;
     condition: (args: any) => boolean;
     stop: boolean;
-}
-
-/**
- * Interface that defines the aggregate method
- */
-export interface IWorkflowAggregateBuilder<TInput, TOutput, TResult> {
-    /**
-     * Aggregates the conditional branches
-     */
-    endIf(): IWorkflowNextBuilder<void, TOutput, TResult>;
-}
-
-/**
- * Interface that defines the methods after if/do is established within a workflow
- */
-export interface IWorkflowDoBuilder<TInput, TOutput, TResult> extends IWorkflowAggregateBuilder<TInput, TOutput, TResult> {
-    /**
-     * Delays the step
-     * @param {number} milliseconds the time in milliseconds to delay the step
-     */
-    delay(func: () => number): IWorkflowDoBuilder<TInput, TOutput, TResult>;
-    /**
-     * Defines the amount of time the step will timeout after
-     * @param {number} milliseconds the time in milliseconds the step will timeout after
-     */
-    timeout(func: () => number): IWorkflowDoBuilder<TInput, TOutput, TResult>;
-}
-
-export interface IWorkflowElseBuilder<TInput, TOutput, TResult> {
-    /**
-     * Defines the step to run
-     * @param {new () => IWorkflowStep<TInput, TNext>} factory the step to run
-     */
-    do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowDoBuilder<TInput, TOutput | TNext, TResult>;
-        /**
-     * If condition is true it will end the workflow
-     */
-    stop(): IWorkflowAggregateBuilder<TInput, TOutput, TResult>;
-}
-
-/**
- * Interface that defines the methods after if/do is established within a workflow
- */
-export interface IWorkflowIfBuilder<TInput, TOutput, TResult> extends IWorkflowAggregateBuilder<TInput, TOutput, TResult> {
-    /**
-     * Delays the step
-     * @param {number} milliseconds the time in milliseconds to delay the step
-     */
-    delay(func: () => number): IWorkflowIfBuilder<TInput, TOutput, TResult>;
-    /**
-     * Defines the amount of time the step will timeout after
-     * @param {number} milliseconds the time in milliseconds the step will timeout after
-     */
-    timeout(func: () => number): IWorkflowIfBuilder<TInput, TOutput, TResult>;
-    /**
-     * Conditional method that will run a step if the expression equates to true
-     * @param expression The expression to evaluate
-     */
-    elseIf(expression: (input: TInput) => boolean): IWorkflowConditionBuilder<TInput, TOutput, TResult>;
-    /**
-     * Conditional method that will run if all other if conditionals don't evaluate
-     */
-    else(): IWorkflowElseBuilder<TInput, TOutput, TResult>;
-}
-
-export interface IWorkflowStoppedBuilder<TInput, TOutput, TResult> {
-    /**
-     * Aggregates the conditional results
-     */
-    endIf(): IWorkflowNextBuilder<void, TOutput, TResult>;
-    /**
-     * Conditional method that will run a step if the expression equates to true
-     * @param expression The expression to evaluate
-     */
-    elseIf(expression: (input: TInput) => boolean): IWorkflowConditionBuilder<TInput, TOutput, TResult>;
-    /**
-     * Conditional method that will run if all other if conditionals don't evaluate
-     */
-    else(): IWorkflowElseBuilder<TInput, TOutput, TResult>;
-}
-
-/**
- * Interface that defines the basic methods on a conditional workflow
- */
-export interface IWorkflowConditionBuilder<TInput, TOutput, TResult> {
-    /**
-     * If condition is true it will end the workflow
-     */
-    stop(): IWorkflowStoppedBuilder<TInput, TOutput, TResult>;
-    /**
-     * Defines the step to run if the condition is true
-     * @param {new () => IWorkflowStep<TInput, TNext>} factory the step to run if the condition is true
-     */
-    do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowIfBuilder<TInput, TOutput | TNext, TResult>;
 }
 
 /**
@@ -122,13 +34,15 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
         return this._branches[this._branches.length - 1];
     }
 
-    public constructor(condition: (input: TInput) => boolean, workflow: Workflow<any, TResult>) {
+    public constructor(func: (input: TInput) => boolean, workflow: Workflow<any, TResult>) {
         super(workflow);
+
+        verifyNullOrThrow(func);
 
         this._branches.push({
             delay: null,
             timeout: null,
-            condition: condition,
+            condition: func,
             factory: null,
             stop: false
         });
@@ -141,21 +55,25 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
     }
     
     public timeout(func: () => number): any {
+        verifyNullOrThrow(func);
+
         this.branch.timeout = func;
 
         return this;
     }
     
     public delay(func: () => number): any {
+        verifyNullOrThrow(func);
+
         this.branch.delay = func;
 
         return this;
     }
 
-    public do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowIfBuilder<TInput, TOutput | TNext, TResult> {
-        if (factory == null) throw new Error("Factory cannot be null");
+    public do<TNext>(func: () => IWorkflowStep<TOutput, TNext>): IWorkflowIfBuilder<TInput, TOutput | TNext, TResult> {
+        verifyNullOrThrow(func);
 
-        this.branch.factory = factory;
+        this.branch.factory = func;
 
         return this;
     }
@@ -164,13 +82,13 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
         return this.next(new WorkflowMoveNextBuilder(this._workflow)) as any;
     }
 
-    public elseIf(condition: (input: TInput) => boolean): IWorkflowConditionBuilder<TInput, TOutput, TResult> {
-        if (condition == null) throw new Error("Condition function cannot be null");
+    public elseIf(func: (input: TInput) => boolean): IWorkflowConditionBuilder<TInput, TOutput, TResult> {
+        verifyNullOrThrow(func);
         
         this._branches.push({
             delay: null,
             timeout: null,
-            condition: condition,
+            condition: func,
             factory: null,
             stop: false
         });
