@@ -26,12 +26,6 @@ class Retirement extends WorkflowStep<number | string, string> {
     }
 }
 
-class UnknownAge extends WorkflowStep<string, string> {
-    public run(age: number | string): Promise<string> {
-        return Promise.resolve("Who knows...");
-    }
-}
-
 class PrintAge extends WorkflowStep<string[], string> {
     public run(result: string[]): Promise<string> {
         return Promise.resolve(result[0]);
