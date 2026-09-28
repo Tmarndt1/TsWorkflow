@@ -57,6 +57,31 @@ async function main() {
 main().catch(console.error);
 ```
 
+## Step events
+
+`run(input, options)` accepts optional per-run observers:
+
+```typescript
+const result = await workflow.run(input, {
+    cancellationTokenSource: source,
+    onStarted: event => console.log("started", event),
+    onCompleted: event => console.log("completed", event),
+    onFailed: event => console.error("failed", event)
+});
+```
+
+`onStarted` runs when a step is about to execute. `onCompleted` runs after that step resolves, and includes its elapsed `durationMs`. `onFailed` runs when a step throws, rejects, or the active run is ended by cancellation or a workflow deadline. A failure event has `origin: "step"` for an error from the step itself and `origin: "run"` when the run ends while the step is active. A step that is never selected by a condition produces no event.
+
+Each event has:
+
+- `runId`: an opaque ID unique to the workflow run.
+- `stepId`: an opaque ID unique within that run.
+- `kind`: `sequential`, `parallel`, `conditional`, or `final`.
+- `timestamp`: a Unix timestamp in milliseconds.
+- `durationMs` on completed and failed events.
+
+Parallel branches emit separate events. Use `runId` and `stepId` to correlate interleaved events from concurrent runs. Event objects are frozen before delivery. Hooks are fire-and-forget: their return values may be promises, but the workflow does not wait for them. Exceptions and rejected promises from hooks are swallowed and never replace the workflow's result or error. Event callbacks are configured per run, so reusable workflow definitions do not retain observers between runs.
+
 ## Status and errors
 
 Import `WorkflowStatus` from `ts-workflow` and compare `workflow.status` with its enum members.

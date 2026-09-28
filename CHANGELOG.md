@@ -11,6 +11,7 @@ User-facing changes are recorded here before release.
 - Fixed numeric values for delays, timeouts, and expiration alongside existing callbacks.
 - Synchronous and thenable step results through `Awaitable<T>`.
 - Strict consumer tests against both CommonJS and ESM declaration bundles.
+- Per-run `onStarted`, `onCompleted`, and `onFailed` step event observers with run and step correlation IDs.
 
 ### Changed
 

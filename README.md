@@ -70,9 +70,29 @@ A step is an object with a `run(input, token?)` method that returns a value, pro
 | `timeout(ms)` / `timeout(() => ms)` | Limit a step's delay and execution. |
 | `endWith(factory)` | Define the final step and workflow result. |
 | `expire(ms)` / `expire(() => ms)` | Limit the whole workflow; configure after `endWith`. |
-| `run(input, source?)` | Execute with an optional `CancellationTokenSource`. |
+| `run(input, sourceOrOptions?)` | Execute with cancellation and/or step event hooks. |
 
 The fluent interfaces expose methods only where they are valid. Input can be omitted for `void` or undefined-accepting workflows. Enable TypeScript's `strictNullChecks` and `strictFunctionTypes` (or `strict`) to enforce input and branch safety. Read the [execution guide](docs/execution.md) for timing, cancellation, structured errors, and status transitions. Existing users should review the [migration notes](docs/migration.md).
+
+### Step events
+
+Pass `onStarted`, `onCompleted`, and `onFailed` in the second argument to `run()` to observe individual steps:
+
+```typescript
+const result = await greeting.run("Ada", {
+    onStarted: event => {
+        console.log(`Started ${event.stepId} (${event.kind})`);
+    },
+    onCompleted: event => {
+        console.log(`Completed ${event.stepId} in ${event.durationMs}ms`);
+    },
+    onFailed: event => {
+        console.error(`Failed ${event.stepId}`, event.error);
+    }
+});
+```
+
+Events contain an opaque `runId`, `stepId`, `kind`, and timestamps. Completion events also include `durationMs`; failure events include `error` and `origin`. Parallel steps each emit their own events, and their IDs let you correlate events from overlapping runs. Hooks never receive step input or output, are not awaited, and errors thrown by a hook are ignored so observers cannot change the workflow result. See the [eventing section](docs/execution.md#step-events) for lifecycle details.
 
 ## Development
 

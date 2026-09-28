@@ -31,3 +31,7 @@ The second generic parameter on conditional builder interfaces now represents ac
 - Use `defineWorkflow<Input, Output>(build)` to capture dependencies in a closure without subclass initialization ordering concerns. Existing workflow subclasses remain supported.
 
 Timing values must be finite numbers. Zero and negative values still disable the corresponding delay or limit. Invalid constants throw `TypeError` when configured; invalid callback results reject at execution time.
+
+## Step event observers
+
+Add per-run `onStarted`, `onCompleted`, and `onFailed` callbacks through the second `run()` argument. Existing calls that pass a `CancellationTokenSource` continue to work; calls that need both use `{ cancellationTokenSource: source, onStarted, onCompleted, onFailed }`. Observers do not receive input or output values, are not awaited, and cannot alter workflow outcomes. Parallel branches emit separate events. See the [eventing guide](execution.md#step-events) for fields and failure semantics.
