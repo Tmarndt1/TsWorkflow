@@ -12,6 +12,10 @@ module.exports = {
       "node"
     ],
     coverageDirectory: "coverage",
+    collectCoverageFrom: ["src/**/*.ts"],
+    coverageThreshold: {
+      global: { statements: 100, branches: 100, functions: 100, lines: 100 }
+    },
     coverageReporters: [
       "json-summary", 
       "text",

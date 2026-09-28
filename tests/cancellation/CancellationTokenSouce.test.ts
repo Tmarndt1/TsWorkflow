@@ -15,7 +15,7 @@ describe('CancellationToken', () => {
         expect(() => {
             cts.cancel();
             cts.token.throwIfCancelled();
-        }).toThrow('Cancelled!');
+        }).toThrow('The workflow was cancelled.');
     });
 
     it('should be cancelled after calling cancel', () => {

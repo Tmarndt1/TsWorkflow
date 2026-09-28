@@ -1,3 +1,5 @@
+import { WorkflowError } from "./WorkflowError";
+
 const CANCEL = Symbol();
 
 /**
@@ -9,6 +11,8 @@ export interface ICancellationToken {
      * @returns {boolean} is cancelled result
      */
     isCancelled(): boolean;
+    /** Throws WorkflowError with code CANCELLED if cancellation was requested. */
+    throwIfCancelled(): void;
 }
 
 /**
@@ -26,7 +30,7 @@ export class CancellationToken implements ICancellationToken {
      */
     public throwIfCancelled(): void {
         if (this.isCancelled()) {
-            throw "Cancelled!";
+            throw WorkflowError.cancelled();
         }
     }
 

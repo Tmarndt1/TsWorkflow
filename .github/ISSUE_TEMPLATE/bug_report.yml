@@ -1,0 +1,39 @@
+name: Bug report
+description: Report unexpected workflow behavior.
+title: "[Bug]: "
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include a small workflow and the input that triggers the problem, or link a reproduction repository.
+      render: typescript
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: TsWorkflow version or commit
+      placeholder: Package version or Git commit
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include your Node.js or browser version, TypeScript version, and operating system.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant error output
+      description: Remove secrets and personal information before sharing logs.
+      render: text

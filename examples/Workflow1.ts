@@ -26,9 +26,9 @@ class Retirement extends WorkflowStep<number | string, string> {
     }
 }
 
-class PrintAge extends WorkflowStep<string[], string> {
-    public run(result: string[]): Promise<string> {
-        return Promise.resolve(result[0]);
+class PrintAge extends WorkflowStep<(number | string)[], string> {
+    public run(result: (number | string)[]): Promise<string> {
+        return Promise.resolve(String(result[0]));
     }
 }
 

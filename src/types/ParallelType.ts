@@ -1,3 +1,3 @@
-import { WorkflowStep } from "../WorkflowStep";
+import { IWorkflowStep } from "../WorkflowStep";
 
-export type ParallelType<T> = T extends () => WorkflowStep<unknown, infer TOutput> ? TOutput : unknown;
+export type ParallelType<T> = T extends () => IWorkflowStep<any, infer TOutput> ? TOutput : unknown;

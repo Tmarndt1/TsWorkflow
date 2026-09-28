@@ -6,7 +6,7 @@ export interface IWorkflowStoppedBuilder<TInput, TOutput, TResult> {
     /**
      * Aggregates the conditional results
      */
-    endIf(): IWorkflowNextBuilder<void, TOutput, TResult>;
+    endIf(): IWorkflowNextBuilder<void, TInput | TOutput, TResult>;
     /**
      * Conditional method that will run a step if the expression equates to true
      * @param expression The expression to evaluate

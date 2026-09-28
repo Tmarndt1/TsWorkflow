@@ -1,3 +1,4 @@
+import { Awaitable } from "./types/Awaitable";
 import { CancellationToken } from "./CancellationTokenSource";
 
 /**
@@ -5,10 +6,10 @@ import { CancellationToken } from "./CancellationTokenSource";
  * which is called when it's the steps turn in the workflow. 
  */
 export abstract class WorkflowStep<TInput, TOutput> implements IWorkflowStep<TInput, TOutput> {
-    public abstract run(input: TInput, cts?: CancellationToken): Promise<TOutput>;
+    public abstract run(input: TInput, cts?: CancellationToken): Awaitable<TOutput>;
 }
 
 export interface IWorkflowStep<TInput, TOutput> {
     [key: string]: any;
-    run: (input: TInput, cts?: CancellationToken) => Promise<TOutput>;
+    run: (input: TInput, cts?: CancellationToken) => Awaitable<TOutput>;
 }

@@ -29,32 +29,11 @@ test('Workflow1-test3', async () => {
     expect(result).toEqual("Contgratulations on retiring!");
 });
 
-test('Workflow1-test4', async () => {
-    const workflow = new Workflow1(1, 0);
-
-    try {
-        const output = await workflow.run(60);
-
-        expect(output).toBeNull();
-    } catch (error) {
-        expect(error).toEqual(WorkflowError.expired(1));
-    }
+test('immediate steps complete within a short expiration and timeout', async () => {
+    const workflow = new Workflow1(1, 1);
+    await expect(workflow.run(60)).resolves.toEqual("Contgratulations on retiring!");
+    expect(workflow.status).toBe(WorkflowStatus.Completed);
 });
-
-test('Workflow1-test5', async () => {
-    const workflow = new Workflow1(0, 1);
-
-    try {
-        const output = await workflow.run(60);
-
-        expect(output).toBeNull();
-    } catch (error) {
-        expect(error).toEqual(WorkflowError.timedOut(1));
-    }
-
-    expect(workflow.status).toBe(WorkflowStatus.Faulted);
-});
-
 
 test('Workflow1-test5', async () => {
     const workflow = new Workflow1(0, 1);

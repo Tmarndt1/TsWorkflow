@@ -1,11 +1,12 @@
+import { Awaitable } from "./types/Awaitable";
+import { Timing } from "./types/Timing";
+import { toTiming } from "./functions/toTiming";
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
 import { WorkflowMoveNextBuilder } from "./WorkflowMoveNextBuilder";
-import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
-import { Workflow } from "./Workflow";
-import { WorkflowError } from "./WorkfowError";
+import { WorkflowStepBuilder, WorkflowDefinition } from "./WorkflowStepBuilder";
+import { WorkflowError } from "./WorkflowError";
 import { IWorkflowConditionBuilder } from "./interfaces/IWorkflowConditionBuilder";
-import { IWorkflowDoBuilder } from "./interfaces/IWorkflowDoBuilder";
 import { IWorkflowElseBuilder } from "./interfaces/IWorkflowElseBuilder";
 import { IWorkflowIfBuilder } from "./interfaces/IWorkflowIfBuilder";
 import { IWorkflowNextBuilder } from "./interfaces/IWorkflowNextBuilder";
@@ -13,39 +14,35 @@ import { IWorkflowStoppedBuilder } from "./interfaces/IWorkflowStoppedBuilder";
 import { verifyNullOrThrow } from "./functions/verifyNullOrThrow";
 
 interface ICondition {
-    delay: () => number;
-    timeout: () => number;
-    factory: () => IWorkflowStep<unknown, unknown>;
+    delay?: () => number;
+    timeout?: () => number;
+    factory?: () => IWorkflowStep<any, any>;
     condition: (args: any) => boolean;
-    stop: boolean;
+    stop?: boolean;
 }
 
 /**
  * WorkflowbuilderCondition class provides the conditional capabilities
  */
-export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends WorkflowStepBuilder<TInput, TOutput, TResult> 
+export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends WorkflowStepBuilder<TInput, TInput | TOutput, TResult>
     implements IWorkflowConditionBuilder<TInput, TOutput, TResult>, IWorkflowIfBuilder<TInput, TOutput, TResult>,
-        IWorkflowElseBuilder<TInput, TOutput, TResult>, IWorkflowDoBuilder<TInput, TOutput, TResult>,
         IWorkflowStoppedBuilder<TInput, TOutput, TResult> {
             
-    private _branches: ICondition[] = [];
+    private _conditions: ICondition[] = [];
 
     get branch(): ICondition {
-        return this._branches[this._branches.length - 1];
+        return this._conditions[this._conditions.length - 1]!;
     }
 
-    public constructor(func: (input: TInput) => boolean, workflow: Workflow<any, TResult>) {
-        super(workflow);
+    public constructor(func: (input: TInput) => boolean, definition?: WorkflowDefinition) {
+        super(definition);
 
-        verifyNullOrThrow(func);
+        this.addBranch(func);
+    }
 
-        this._branches.push({
-            delay: null,
-            timeout: null,
-            condition: func,
-            factory: null,
-            stop: false
-        });
+    private addBranch(condition: (input: TInput) => boolean): void {
+        verifyNullOrThrow(condition);
+        this._conditions.push({ condition });
     }
 
     public stop(): IWorkflowStoppedBuilder<TInput, TOutput, TResult> {
@@ -54,23 +51,19 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
         return this;
     }
     
-    public timeout(func: () => number): any {
-        verifyNullOrThrow(func);
-
-        this.branch.timeout = func;
+    public timeout(duration: Timing): this {
+        this.branch.timeout = toTiming(duration);
 
         return this;
     }
     
-    public delay(func: () => number): any {
-        verifyNullOrThrow(func);
-
-        this.branch.delay = func;
+    public delay(duration: Timing): this {
+        this.branch.delay = toTiming(duration);
 
         return this;
     }
 
-    public do<TNext>(func: () => IWorkflowStep<TOutput, TNext>): IWorkflowIfBuilder<TInput, TOutput | TNext, TResult> {
+    public do<TNext>(func: () => IWorkflowStep<TInput, TNext>): IWorkflowIfBuilder<TInput, TOutput | TNext, TResult> {
         verifyNullOrThrow(func);
 
         this.branch.factory = func;
@@ -78,86 +71,35 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
         return this;
     }
 
-    public endIf(): IWorkflowNextBuilder<void, TOutput, TResult> {
-        return this.next(new WorkflowMoveNextBuilder(this._workflow)) as any;
+    public endIf(): IWorkflowNextBuilder<void, TInput | TOutput, TResult> {
+        return this.next(new WorkflowMoveNextBuilder<TInput | TOutput, TInput | TOutput, TResult>(this._definition));
     }
 
     public elseIf(func: (input: TInput) => boolean): IWorkflowConditionBuilder<TInput, TOutput, TResult> {
-        verifyNullOrThrow(func);
-        
-        this._branches.push({
-            delay: null,
-            timeout: null,
-            condition: func,
-            factory: null,
-            stop: false
-        });
+        this.addBranch(func);
 
         return this;
     }
 
     public else(): IWorkflowElseBuilder<TInput, TOutput, TResult> {        
-        this._branches.push({
-            delay: null,
-            timeout: null,
-            condition: () => true,
-            factory: null,
-            stop: false
-        });
+        this.addBranch(() => true);
 
-        return this;
+        // The exhaustive view omits pass-through input; execution is shared.
+        return this as unknown as IWorkflowElseBuilder<TInput, TOutput, TResult>;
     }
 
-    public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
-        return new Promise(async (resolve, reject) => {
-            let branch = this._branches.find(x => x?.condition?.(input) === true);
+    public async run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
+        if (cts.token.isCancelled()) throw WorkflowError.cancelled();
+        const condition = this._conditions.find(branch => branch.condition(input));
+        if (condition?.stop) throw WorkflowError.stopped();
 
-            try {
-                if (branch.stop) {
-                    return reject(WorkflowError.stopped());
-                }
-
-                let delay: number | null = branch?.delay?.() ?? 0;
-                let timeout: number = branch?.timeout?.() ?? 0;
-                let expired: boolean = false;
-
-                let delayTimeout: NodeJS.Timeout;
-                let expireTimeout: NodeJS.Timeout;
-
-                if (timeout > 0) {
-                    expireTimeout = setTimeout(async () => {
-                        expired = true;
-
-                        cts.cancel();
-
-                        if (delay != null) clearTimeout(delayTimeout);
-
-                        reject(WorkflowError.timedOut(timeout));
-                    }, timeout);
-                }
-
-                delayTimeout = setTimeout(async () => {
-                    try {
-                        clearInterval(expireTimeout);
-
-                        if (expired) return reject(WorkflowError.timedOut(timeout));
-
-                        if (this.hasNext()) {
-                            resolve(
-                                await this.getNext()?.run(await branch.factory()?.run(input, cts.token) as TOutput, cts) as TResult
-                            )
-                        } else {
-                            resolve(
-                                await branch.factory()?.run(input, cts.token) as TResult
-                            )
-                        }
-                    } catch (error) {
-                        reject(error);
-                    }
-                }, delay);                
-            } catch (error) {
-                return Promise.reject(error);
-            }
-        });
+        return this.executeStep(
+            () => condition?.factory
+                ? condition.factory().run(input, cts.token) as Awaitable<TInput | TOutput>
+                : input,
+            cts,
+            condition?.delay?.() ?? 0,
+            condition?.timeout?.() ?? 0
+        );
     }
 }

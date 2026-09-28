@@ -3,7 +3,8 @@ import { IWorkflowIfBuilder } from "./IWorkflowIfBuilder";
 import { IWorkflowStoppedBuilder } from "./IWorkflowStoppedBuilder";
 
 /**
- * Interface that defines the basic methods on a conditional workflow
+ * A pending conditional branch. TOutput tracks completed branch results,
+ * excluding the original input that may pass through an unmatched block.
  */
 export interface IWorkflowConditionBuilder<TInput, TOutput, TResult> {
     /**
@@ -14,5 +15,5 @@ export interface IWorkflowConditionBuilder<TInput, TOutput, TResult> {
      * Defines the step to run if the condition is true
      * @param {new () => IWorkflowStep<TInput, TNext>} factory the step to run if the condition is true
      */
-    do<TNext>(factory: () => IWorkflowStep<TOutput, TNext>): IWorkflowIfBuilder<TInput, TOutput | TNext, TResult>;
+    do<TNext>(factory: () => IWorkflowStep<TInput, TNext>): IWorkflowIfBuilder<TInput, TOutput | TNext, TResult>;
 }

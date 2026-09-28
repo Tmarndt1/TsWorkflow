@@ -1,3 +1,4 @@
+import { Timing } from "../types/Timing";
 import { IWorkflowAggregateBuilder } from "./IWorkflowAggregrateBuilder";
 
 /**
@@ -6,12 +7,12 @@ import { IWorkflowAggregateBuilder } from "./IWorkflowAggregrateBuilder";
 export interface IWorkflowDoBuilder<TInput, TOutput, TResult> extends IWorkflowAggregateBuilder<TInput, TOutput, TResult> {
     /**
      * Delays the step
-     * @param {number} milliseconds the time in milliseconds to delay the step
+     * @param duration A finite millisecond value or a callback evaluated during execution.
      */
-    delay(func: () => number): IWorkflowDoBuilder<TInput, TOutput, TResult>;
+    delay(duration: Timing): IWorkflowDoBuilder<TInput, TOutput, TResult>;
     /**
      * Defines the amount of time the step will timeout after
-     * @param {number} milliseconds the time in milliseconds the step will timeout after
+     * @param duration A finite millisecond value or a callback evaluated during execution.
      */
-    timeout(func: () => number): IWorkflowDoBuilder<TInput, TOutput, TResult>;
+    timeout(duration: Timing): IWorkflowDoBuilder<TInput, TOutput, TResult>;
 }

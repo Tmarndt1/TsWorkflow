@@ -1,10 +1,11 @@
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
-import { WorkflowError } from "./WorkfowError";
+import { WorkflowError, WorkflowErrorCode } from "./WorkflowError";
+import { WorkflowRunArgs } from "./types/WorkflowRunArgs";
 import { IWorkflowFinalBuilder } from "./interfaces/IWorkflowFinalBuilder";
 
 export interface IWorkflow<TInput, TOutput> {
-    run(input: TInput, cts?: CancellationTokenSource): Promise<TOutput>;
+    run(...args: WorkflowRunArgs<TInput>): Promise<TOutput>;
 }
 
 export enum WorkflowStatus {
@@ -27,11 +28,7 @@ export enum WorkflowStatus {
     /**
      * Stopped status indicates the Workflow has been stopped.
      */
-    Stopped,
-    /**
-     * Waiting status indidcates the Workflow is waiting for an event to occur.
-     */
-    Waiting,
+    Stopped
 }
 
 /**
@@ -50,7 +47,7 @@ export abstract class Workflow<TInput, TResult> implements IWorkflow<TInput, TRe
     }
 
     public constructor() {
-        this._builder = new WorkflowBuilder<TInput, TResult>(this);
+        this._builder = new WorkflowBuilder<TInput, TResult>();
 
         this.build(this._builder);
     }
@@ -67,35 +64,19 @@ export abstract class Workflow<TInput, TResult> implements IWorkflow<TInput, TRe
      * @param {CancellationTokenSource} cts The optional CancellationTokenSource to cancel the workflow.
      * @returns A Promise of type TResult.
      */
-    public run(input?: TInput, cts?: CancellationTokenSource): Promise<TResult> {
-        if (this._builder == null) {
-            this._status = WorkflowStatus.Faulted;
-
-            return Promise.reject("Interal workflow error");
-        }
-
+    public async run(...args: WorkflowRunArgs<TInput>): Promise<TResult> {
+        const [input, cts = new CancellationTokenSource()] = args;
         this._status = WorkflowStatus.Running;
-
-        return new Promise((resolve, reject) => {
-            this._builder?.run(input, cts ?? new CancellationTokenSource())
-            .then(res => {
-                this._status = WorkflowStatus.Completed;
-
-                resolve(res);
-            })
-            .catch(err => {
-                if (err === WorkflowError.stopped()) {
-                    this._status = WorkflowStatus.Stopped;
-                } else {
-                    this._status = WorkflowStatus.Faulted;
-                }
-
-                reject(err);
-            });
-        });
+        try {
+            const output = await this._builder.run(input as TInput, cts);
+            this._status = WorkflowStatus.Completed;
+            return output;
+        } catch (error) {
+            this._status = error instanceof WorkflowError && error.code === WorkflowErrorCode.Stopped
+                ? WorkflowStatus.Stopped
+                : WorkflowStatus.Faulted;
+            throw error;
+        }
     }
-}
 
-export function setWorkflowStatus(workflow: Workflow<any, any>, status: WorkflowStatus) {
-    workflow["_status"] = status;
 }

@@ -1,31 +1,48 @@
-name: Main
+name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  check:
+    name: Check (${{ matrix.os }}, Node 24)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v7.0.0
         with:
-          node-version: 14
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run Jest tests
-        run: npm test -- --coverage      
-      
-      - name: Publish coverage report
-        uses: actions/upload-artifact@v2
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Check types, tests, build, and package formats
+        run: npm run check
+      - name: Inspect package contents
+        run: npm pack --dry-run
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
         with:
-          name: coverage-report
-          path: coverage
+          name: coverage-${{ matrix.os }}
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 14

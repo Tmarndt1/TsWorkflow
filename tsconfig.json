@@ -8,11 +8,18 @@
     "forceConsistentCasingInFileNames": true,
     "strict": false,
     "noUncheckedIndexedAccess": true,
-    "noEmit": true
+    "noEmit": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true
   },
-  "include": ["./src"],
+  "include": [
+    "./src",
+    "./index.ts",
+    "./tests",
+    "./examples"
+  ],
   "exclude": [
-    "node_modules", 
+    "node_modules",
     "**/__tests__/*",
     "**/__examples__/*"
   ]

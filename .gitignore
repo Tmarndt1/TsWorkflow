@@ -3,3 +3,6 @@ dist
 .vscode
 obj
 bin
+# Generated test reports and package archives
+coverage/
+*.tgz

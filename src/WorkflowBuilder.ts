@@ -1,10 +1,10 @@
+import { execute } from "./functions/execute";
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
 import { WorkflowNextBuilder } from "./WorkflowNextBuilder";
-import { WorkflowStepBuilder } from "./WorkflowStepBuilder";
 import { WorkflowFinalBuilder } from "./WorkflowFinalBuilder";
-import { Workflow } from "./Workflow";
-import { WorkflowError } from "./WorkfowError";
+import { WorkflowStepBuilder, WorkflowDefinition } from "./WorkflowStepBuilder";
+import { WorkflowError } from "./WorkflowError";
 import { IWorkflowNextExtBuilder } from "./interfaces/IWorkflowNextExtBuilder";
 import { verifyNullOrThrow } from "./functions/verifyNullOrThrow";
 
@@ -21,12 +21,11 @@ export interface IWorkflowBuilder<TInput, TResult> {
  * WorkflowBuilder class that allows for the chaining of various workflow steps and conditions. 
  */
 export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput, TResult> {
-    private readonly _workflow: Workflow<TInput, TResult>;
+    private _definition: WorkflowDefinition = { revision: 0 };
+    private _final: WorkflowFinalBuilder<any, TResult> | undefined;
+    private _cachedRevision = -1;
     private _builder: WorkflowStepBuilder<any, any, TResult> | null = null;
 
-    public constructor(workflow: Workflow<TInput, TResult>) {
-        this._workflow = workflow;
-    }
     
     /**
      * Starts the workflow with the WorkflowStep dependency.
@@ -36,9 +35,12 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
     public startWith<TOutput>(func: () => IWorkflowStep<TInput, TOutput>): IWorkflowNextExtBuilder<TInput, TOutput, TResult> {
         verifyNullOrThrow(func);
 
-        this._builder = new WorkflowNextBuilder(func, this._workflow);
-
-        return this._builder as any as IWorkflowNextExtBuilder<TInput, TOutput, TResult>;
+        const definition: WorkflowDefinition = { revision: 0 };
+        const builder = new WorkflowNextBuilder<TInput, TOutput, TResult>(func, definition);
+        this._definition = definition;
+        this._builder = builder;
+        this._cachedRevision = -1;
+        return builder;
     }
 
     /**
@@ -46,42 +48,19 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
      * @param {CancellationTokenSource} cts The CancellationTokenSource to cancel the workflow.
      * @returns {Promise<TResult>} A Promise of type TResult.
      */
-    public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
-        return new Promise(async (resolve, reject) => {
-            let expiration: number = 0;
-            let expired: boolean = false;
-            let builder: WorkflowStepBuilder<any, any, TResult> = this._builder;
-            let expirationTimeout: NodeJS.Timeout;
-
-            while (builder != null) {
-                builder = builder.getNext();
-
-                if (!(builder instanceof WorkflowFinalBuilder)) continue;
-
-                expiration = builder.expiration();
+    public async run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
+        const first = this._builder;
+        if (!first) throw new Error("Workflow must define a starting step");
+        // Re-scan only after the graph changes; retained, detached builder handles
+        // must never replace the active chain's expiration.
+        if (this._cachedRevision !== this._definition.revision) {
+            this._final = undefined;
+            for (let step: WorkflowStepBuilder<any, any, TResult> | undefined = first; step; step = step.getNext()) {
+                if (step instanceof WorkflowFinalBuilder) this._final = step;
             }
-
-            if (expiration > 0) {
-                expirationTimeout = setTimeout(() => {
-                    expired = true;
-
-                    cts?.cancel();
-
-                    reject(WorkflowError.expired(expiration));
-                }, expiration);
-            }
-
-            try {
-                let output: TResult = await this._builder?.run(input, cts);
-
-                clearInterval(expirationTimeout);
-
-                if (expired) return;
-                
-                resolve(output);
-            } catch (error) {                
-                reject(error);
-            }
-        });
+            this._cachedRevision = this._definition.revision;
+        }
+        const expiration = this._final?.expiration() ?? 0;
+        return execute(() => first.run(input, cts), cts, 0, expiration, WorkflowError.expired);
     }
 }
