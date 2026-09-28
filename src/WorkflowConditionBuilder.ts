@@ -1,3 +1,4 @@
+import { WorkflowRunContext } from "./WorkflowRunContext";
 import { Awaitable } from "./types/Awaitable";
 import { Timing } from "./types/Timing";
 import { toTiming } from "./functions/toTiming";
@@ -88,16 +89,17 @@ export class WorkflowConditionBuilder<TInput, TOutput, TResult> extends Workflow
         return this as unknown as IWorkflowElseBuilder<TInput, TOutput, TResult>;
     }
 
-    public async run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
+    public async run(input: TInput, cts: CancellationTokenSource, context?: WorkflowRunContext): Promise<TResult> {
         if (cts.token.isCancelled()) throw WorkflowError.cancelled();
         const condition = this._conditions.find(branch => branch.condition(input));
         if (condition?.stop) throw WorkflowError.stopped();
 
         return this.executeStep(
             () => condition?.factory
-                ? condition.factory().run(input, cts.token) as Awaitable<TInput | TOutput>
+                ? this.runFactory(condition.factory, input, cts, context, "conditional") as Awaitable<TInput | TOutput>
                 : input,
             cts,
+            context,
             condition?.delay?.() ?? 0,
             condition?.timeout?.() ?? 0
         );

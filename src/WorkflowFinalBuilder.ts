@@ -1,3 +1,4 @@
+import { WorkflowRunContext } from "./WorkflowRunContext";
 import { Timing } from "./types/Timing";
 import { toTiming } from "./functions/toTiming";
 import CancellationTokenSource from "./CancellationTokenSource";
@@ -34,7 +35,7 @@ export class WorkflowFinalBuilder<TInput, TResult> extends WorkflowStepBuilder<T
         return this._expiration?.() ?? 0;
     }
 
-    public async run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
-        return this.executeStep(() => this._factory().run(input, cts.token), cts);
+    public async run(input: TInput, cts: CancellationTokenSource, context?: WorkflowRunContext): Promise<TResult> {
+        return this.executeStep(() => this.runFactory(this._factory, input, cts, context, "final"), cts, context);
     }
 }

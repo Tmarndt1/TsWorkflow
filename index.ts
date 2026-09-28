@@ -21,3 +21,4 @@ export type { Awaitable } from "./src/types/Awaitable";
 export type { Timing } from "./src/types/Timing";
 export type { ParallelType } from "./src/types/ParallelType";
 export type { WorkflowRunArgs } from "./src/types/WorkflowRunArgs";
+export type { WorkflowRunOptions, WorkflowStepKind, WorkflowStepStartedEvent, WorkflowStepCompletedEvent, WorkflowStepFailedEvent } from "./src/types/WorkflowRunOptions";

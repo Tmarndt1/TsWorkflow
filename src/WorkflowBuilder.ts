@@ -1,3 +1,4 @@
+import { WorkflowRunContext } from "./WorkflowRunContext";
 import { execute } from "./functions/execute";
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowStep } from "./WorkflowStep";
@@ -48,7 +49,7 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
      * @param {CancellationTokenSource} cts The CancellationTokenSource to cancel the workflow.
      * @returns {Promise<TResult>} A Promise of type TResult.
      */
-    public async run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
+    public async run(input: TInput, cts: CancellationTokenSource, context?: WorkflowRunContext): Promise<TResult> {
         const first = this._builder;
         if (!first) throw new Error("Workflow must define a starting step");
         // Re-scan only after the graph changes; retained, detached builder handles
@@ -61,6 +62,6 @@ export class WorkflowBuilder<TInput, TResult> implements IWorkflowBuilder<TInput
             this._cachedRevision = this._definition.revision;
         }
         const expiration = this._final?.expiration() ?? 0;
-        return execute(() => first.run(input, cts), cts, 0, expiration, WorkflowError.expired);
+        return execute(() => first.run(input, cts, context), cts, 0, expiration, WorkflowError.expired);
     }
 }

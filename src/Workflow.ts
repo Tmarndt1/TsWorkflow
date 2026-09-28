@@ -1,3 +1,4 @@
+import { WorkflowRunContext } from "./WorkflowRunContext";
 import CancellationTokenSource from "./CancellationTokenSource";
 import { IWorkflowBuilder, WorkflowBuilder } from "./WorkflowBuilder";
 import { WorkflowError, WorkflowErrorCode } from "./WorkflowError";
@@ -65,17 +66,27 @@ export abstract class Workflow<TInput, TResult> implements IWorkflow<TInput, TRe
      * @returns A Promise of type TResult.
      */
     public async run(...args: WorkflowRunArgs<TInput>): Promise<TResult> {
-        const [input, cts = new CancellationTokenSource()] = args;
+        const [input, sourceOrOptions] = args;
+        const options = sourceOrOptions && "token" in sourceOrOptions
+            ? { cancellationTokenSource: sourceOrOptions }
+            : sourceOrOptions;
+        const cts = options?.cancellationTokenSource ?? new CancellationTokenSource();
+        const context = options && (options.onStarted || options.onCompleted || options.onFailed)
+            ? new WorkflowRunContext(options)
+            : undefined;
         this._status = WorkflowStatus.Running;
         try {
-            const output = await this._builder.run(input as TInput, cts);
+            const output = await this._builder.run(input as TInput, cts, context);
             this._status = WorkflowStatus.Completed;
             return output;
         } catch (error) {
             this._status = error instanceof WorkflowError && error.code === WorkflowErrorCode.Stopped
                 ? WorkflowStatus.Stopped
                 : WorkflowStatus.Faulted;
+            context?.fail(error);
             throw error;
+        } finally {
+            context?.close();
         }
     }
 

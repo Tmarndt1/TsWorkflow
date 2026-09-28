@@ -1,3 +1,4 @@
+import { WorkflowRunContext } from "./WorkflowRunContext";
 import { Timing } from "./types/Timing";
 import { toTiming } from "./functions/toTiming";
 import CancellationTokenSource from "./CancellationTokenSource";
@@ -54,8 +55,8 @@ export class WorkflowNextBuilder<TInput, TOutput, TResult> extends WorkflowTimed
         verifyNullOrThrow(_factory);
     }
 
-    public async run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
-        return this.executeStep(() => this._factory().run(input, cts.token), cts);
+    public async run(input: TInput, cts: CancellationTokenSource, context?: WorkflowRunContext): Promise<TResult> {
+        return this.executeStep(() => this.runFactory(this._factory, input, cts, context, "sequential"), cts, context);
     }
 }
 
@@ -71,10 +72,11 @@ export class WorkflowParallelBuilder<TInput, TOutput, TResult>
         this._factories = [...factories];
     }
 
-    public async run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
+    public async run(input: TInput, cts: CancellationTokenSource, context?: WorkflowRunContext): Promise<TResult> {
         return this.executeStep(
-            () => Promise.all(this._factories.map(factory => factory().run(input, cts.token))) as Promise<TOutput>,
-            cts
+            () => Promise.all(this._factories.map(factory => this.runFactory(factory, input, cts, context, "parallel"))) as Promise<TOutput>,
+            cts,
+            context
         );
     }
 }
@@ -84,7 +86,7 @@ export class WorkflowMoveNextBuilder<TInput, TOutput, TResult> extends WorkflowC
         super(definition);
     }
 
-    public run(input: TInput, cts: CancellationTokenSource): Promise<TResult> {
-        return this._next?.run(input, cts) ?? Promise.reject(new Error("Internal error in workflow"));
+    public run(input: TInput, cts: CancellationTokenSource, context?: WorkflowRunContext): Promise<TResult> {
+        return this._next?.run(input, cts, context) ?? Promise.reject(new Error("Internal error in workflow"));
     }
 }
