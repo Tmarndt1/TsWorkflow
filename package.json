@@ -17,6 +17,7 @@
     "lint": "tsc",
     "debug": "node --inspect-brk ./node_modules/jest/bin/jest -i",
     "test:package": "node scripts/check-package.cjs",
+    "example:events": "ts-node examples/WorkflowEvents.ts",
     "check": "npm run lint && npm run test:coverage -- --runInBand && npm run build && npm run test:package"
   },
   "repository": {

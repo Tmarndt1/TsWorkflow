@@ -1,0 +1,41 @@
+.step { flex-wrap: wrap; min-width: 0; }
+.inspector { flex: 0 0 100%; min-width: 0; margin-top: 6px; }
+.step .code-caption { font-size: 9px; letter-spacing: 1px; margin: 0 0 8px; }
+.step-code { background: #152a25; color: #dcece1; border-radius: 6px; padding: 10px 0; margin: 0; overflow-x: auto; font: 11px/1.8 Consolas, monospace; }
+.code-line { display: block; padding: 0 12px; border-left: 3px solid transparent; }
+.code-line::before { content: attr(data-line); display: inline-block; width: 20px; color: #90a899; user-select: none; }
+.code-line.executing { background: #c6f86b; border-color: #fff; color: #142709; font-weight: 800; box-shadow: inset 0 0 0 1px #e8ffb9; }
+.code-line.executing::before { content: '▶'; color: #244409; }
+.code-line.returned { background: #2e684b; border-color: #a6f3c3; color: #fff; font-weight: 700; }
+.code-line.returned::before { content: '✓'; color: #c6ffdc; }
+.code-line.error-line { background: #8a3028; border-color: #ffb0a2; color: #fff; }
+.code-line.error-line::before { content: '!'; color: #fff; font-weight: 800; }
+.step[data-state=running] { border: 2px solid #438513; background: #f0ffd9; box-shadow: 0 0 0 4px #a9de6355, 0 6px 22px #46782028; }
+.step[data-state=running] .state { background: #28560f; color: #fff; border-radius: 5px; padding: 6px 10px; font-weight: 750; }
+.step[data-state=running] .code-caption { color: #315809; font-weight: 800; }
+.step-output { font: 11px/1.6 Consolas, monospace; color: #355c48; background: #edf3ed; padding: 12px; border-radius: 6px; margin: 8px 0 0; max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.step[data-state=failed] .step-output { color: #943f30; background: #fae8e0; }
+.step[data-state=skipped] .step-code { opacity: .65; }
+.workspace { grid-template-columns: 280px minmax(0, 1fr); }
+.parallel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 1000px) { .workspace, .parallel { grid-template-columns: minmax(0, 1fr); } }
+.source-link { background: transparent; color: #235d43; padding: 4px 0 10px; text-decoration: underline; font-size: 12px; }
+#view-source { margin-bottom: 18px; }
+#source-dialog { width: min(1000px, 94vw); max-height: 90vh; border: 1px solid #b8cebd; border-radius: 14px; padding: 24px; color: #172e2b; }
+#source-dialog::backdrop { background: #10261fbb; }
+.source-code { max-height: 55vh; overflow: auto; padding: 20px; background: #152a25; color: #e3f1e7; border-radius: 8px; font: 13px/1.7 Consolas, monospace; tab-size: 4; }
+.step-code, .source-code, #source-lines { font-family: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace; font-size: 13px; line-height: 1.8; font-variant-ligatures: none; }
+.step-code, .source-code { background: #18212f; color: #dce6f2; }
+.token.comment, .token.prolog { color: #93a5b8; font-style: italic; }
+.token.keyword { color: #c5a3ff; }
+.token.string, .token.template-string { color: #a5df9d; }
+.token.number, .token.boolean { color: #ffcc8c; }
+.token.function { color: #8ecbff; }
+.token.class-name, .token.builtin { color: #72dfcf; }
+.token.operator, .token.punctuation { color: #b8c9dc; }
+.token.parameter, .token.property { color: #e3cf98; }
+.code-line.executing .token { color: inherit; }
+.code-line.error-line .token { color: inherit; }
+.source-frame { display: flex; max-height: 60vh; overflow: auto; border-radius: 8px; margin-top: 16px; background: #18212f; }
+.source-frame .source-code { max-height: none; overflow: visible; margin: 0; padding: 18px; border-radius: 0; flex: 1; }
+#source-lines { position: sticky; left: 0; background: #131c28; color: #8295ad; text-align: right; padding: 18px 12px; margin: 0; user-select: none; border-right: 1px solid #304054; }

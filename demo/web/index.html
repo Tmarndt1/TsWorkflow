@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TsWorkflow · Checkout playground</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./code.css">
+  <script type="importmap">{"imports":{"ts-workflow":"./workflow.mjs"}}</script>
+  <script type="module" src="./browser.js"></script>
+  <script src="./prism.js" data-manual></script>
+  <script src="./prism-typescript.js"></script>
+</head>
+<body>
+  <header><a href="./">TsWorkflow<span> / playground</span></a><span class="local">● Runs in your browser</span></header>
+  <main>
+    <section class="intro"><p class="eyebrow">INTERACTIVE DEMO</p><h1>One order.<br>Every step, visible.</h1><p>Explore branching, parallel execution, and cancellation with a real workflow. Inventory and payments are simulated.</p></section>
+    <div class="workspace">
+      <section class="panel controls" aria-labelledby="configure-title">
+        <p class="eyebrow">01 / CONFIGURE</p><h2 id="configure-title">Build your run</h2>
+        <form id="configuration">
+          <fieldset id="settings">
+            <label for="scenario">Scenario</label>
+            <select id="scenario"><option value="success">Successful checkout</option><option value="invalid">Invalid order</option><option value="declined">Payment declined</option><option value="cancelled">Automatic cancellation</option><option value="timeout">Parallel timeout</option></select>
+            <label for="amount">Order subtotal ($)</label><input id="amount" type="number" min="0" max="1000000" step="0.01" value="110" required>
+            <p class="hint">Orders of $100 or more receive 10% off. Try $50 to skip the discount step.</p>
+            <label for="speed">Execution speed</label><select id="speed"><option value="1800">Slow · about 8 seconds per run</option><option value="900">Normal · about 4 seconds per run</option><option value="200">Fast · about 1 second per run</option></select>
+            <p class="hint">A presentation pause keeps each step visible before its code runs. Durations include this pause.</p>
+          </fieldset>
+          <div class="actions"><button id="run" type="submit">Run workflow ↗</button><button id="cancel" type="button" class="secondary" disabled>Cancel</button></div>
+        </form>
+        <p class="hint">Cancellation is cooperative. Active services check their token when their work resumes.</p>
+      </section>
+      <section class="panel execution" aria-labelledby="execution-title">
+        <div class="section-head"><div><p class="eyebrow">02 / EXECUTE</p><h2 id="execution-title">Checkout workflow</h2></div><span id="status" role="status" class="badge">Ready</span></div>
+        <p class="hint">Code excerpts highlight active steps in green, returned lines after completion, and failed steps in red. Parallel await calls stay highlighted while waiting. Synchronous steps may finish immediately. Results are actual returned values; amounts are in cents.</p>
+        <button type="button" id="view-source" class="secondary">View workflow source</button>
+        <div class="flow">
+          <article id="validate" class="step"><span class="number">01</span><div><h3>Validate order</h3><p>Check items & calculate subtotal</p></div><span class="state">Waiting</span></article>
+          <div class="connector">↓</div>
+          <article id="discount" class="step"><span class="number">02</span><div><h3>Apply discount</h3><p>Only when subtotal ≥ $100</p></div><span class="state">Waiting</span></article>
+          <div class="connector">↓ <span>PARALLEL</span></div>
+          <div class="parallel">
+            <article id="inventory" class="step"><div><h3>Reserve inventory</h3><p>Simulated warehouse</p></div><span class="state">Waiting</span></article>
+            <article id="payment" class="step"><div><h3>Authorize payment</h3><p>Simulated payment service</p></div><span class="state">Waiting</span></article>
+          </div>
+          <div class="connector">↓</div>
+          <article id="receipt" class="step"><span class="number">04</span><div><h3>Create receipt</h3><p>Combine both service results</p></div><span class="state">Waiting</span></article>
+        </div>
+        <div id="result" class="result" role="status">Ready when you are. Choose a scenario and run the workflow.</div>
+      </section>
+    </div>
+    <section class="panel events" aria-labelledby="events-title"><div class="section-head"><div><p class="eyebrow">03 / OBSERVE</p><h2 id="events-title">Lifecycle events</h2></div><span id="event-count" class="badge">0 events</span></div><p class="hint">Live from onStarted, onCompleted, and onFailed. Each parallel step emits its own events.</p><ol id="events"><li class="empty">Step events will appear here.</li></ol></section>
+    <footer>Powered by the local TsWorkflow library · No API keys or backend required</footer>
+  </main>
+  <dialog id="source-dialog" aria-labelledby="source-title">
+    <div class="section-head"><h2 id="source-title">Actual demo source</h2><button type="button" id="close-source" class="secondary">Close</button></div>
+    <p class="hint">Full TypeScript files included directly from the source at build time, including validation, service logic, and presentation pauses.</p>
+    <label for="source-file">Source file</label>
+    <select id="source-file"><option value="checkout.ts">checkout.ts — workflow definition & validation</option><option value="services.ts">services.ts — inventory & payment steps</option><option value="order.ts">order.ts — data types & errors</option><option value="browser.ts">browser.ts — events & UI integration</option></select>
+    <div class="source-frame"><pre id="source-lines" aria-hidden="true"></pre><pre class="source-code"><code id="source-text"></code></pre></div>
+  </dialog>
+</body>
+</html>

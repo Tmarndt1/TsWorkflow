@@ -1,0 +1,23 @@
+{
+  "name": "ts-workflow-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "An order-processing demo of TsWorkflow and its step events.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && node dist/main.js",
+    "build:web": "npm --prefix .. run build && npm run build && node scripts/build-web.mjs",
+    "web": "npm run build:web && node scripts/serve.mjs",
+    "test": "npm run build && node --test test/scenarios.cjs",
+    "check": "npm test"
+  },
+  "dependencies": {
+    "ts-workflow": "file:.."
+  },
+  "devDependencies": {
+    "@types/node": "20.4.1",
+    "prismjs": "^1.30.0",
+    "typescript": "4.9.5"
+  }
+}

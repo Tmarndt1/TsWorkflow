@@ -94,7 +94,50 @@ const result = await greeting.run("Ada", {
 
 Events contain an opaque `runId`, `stepId`, `kind`, and timestamps. Completion events also include `durationMs`; failure events include `error` and `origin`. Parallel steps each emit their own events, and their IDs let you correlate events from overlapping runs. Hooks never receive step input or output, are not awaited, and errors thrown by a hook are ignored so observers cannot change the workflow result. See the [eventing section](docs/execution.md#step-events) for lifecycle details.
 
+Run the [complete event examples](examples/WorkflowEvents.ts) from the repository:
+
+```sh
+npm ci
+npm run example:events
+```
+
+The example runs three scenarios:
+
+- **Successful execution:** logs `onStarted` and `onCompleted` for sequential, conditional, parallel, and final steps, then prints `Hello, ADA! (3 letters)`.
+- **Application failure:** logs `onFailed` with `origin: "step"` and handles the rejected run. Observing a failure does not consume the rejection.
+- **Cancellation:** passes a `CancellationTokenSource` alongside the hooks, cancels active work, and handles `WorkflowErrorCode.Cancelled`. The cancelled step has no completion event, and the final step does not run.
+
+Run IDs and durations vary between executions. Each scenario is exported separately so you can import it without starting the other examples. Repository examples use `../index`; installed applications should import from `ts-workflow`.
+
+## Run the interactive demo
+
+With Node.js 24 installed, run these commands from the repository root:
+
+```sh
+npm ci
+cd demo
+npm ci
+npm run web
+```
+
+Open [http://127.0.0.1:4173](http://127.0.0.1:4173), choose a scenario, and click **Run workflow**. The page follows executing steps, highlights their code, and shows returned values and lifecycle events. Use **View actual source** to inspect the TypeScript implementations, or try cancellation, payment failures, and timeouts.
+
+`npm run web` builds the library and demo before starting the local static server. Stop it with **Ctrl+C**. After editing source files, restart the command and refresh the page.
+
+From `demo/`, you can also run:
+
+```sh
+npm start               # Run all five CLI scenarios
+npm start -- success    # Run one CLI scenario
+npm test                # Build and run the demo tests
+npm run build:web       # Generate static files in demo/site/
+```
+
+See the [demo README](demo/README.md) for scenario details and static hosting instructions.
+
 ## Development
+
+For a separate application that consumes the built package, try the [order-processing demo](demo/README.md). It has its own package, strict TypeScript configuration, event logging, five runnable scenarios, and tests.
 
 ```sh
 npm ci

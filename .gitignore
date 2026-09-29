@@ -6,3 +6,4 @@ bin
 # Generated test reports and package archives
 coverage/
 *.tgz
+demo/site/

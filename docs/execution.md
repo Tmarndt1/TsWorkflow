@@ -59,6 +59,8 @@ main().catch(console.error);
 
 ## Step events
 
+For complete runnable examples of successful steps, application failure, and cancellation, see [WorkflowEvents.ts](../examples/WorkflowEvents.ts). From the repository, run `npm run example:events`.
+
 `run(input, options)` accepts optional per-run observers:
 
 ```typescript
